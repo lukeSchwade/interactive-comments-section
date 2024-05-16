@@ -16,6 +16,7 @@ body {
   flex-direction: column;
   align-items: center;
   background-color: hsl(228, 33%, 97%);
+  padding-top: 5vh;
 }
 
 .main-page-container {
@@ -32,14 +33,49 @@ body {
   }
 }
 
+#comments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
 .comment {
   background-color: hsl(0, 0%, 100%);
   padding: 1em;
   border-radius: 16px;
 }
+
+.comment-tree-grid-container {
+  display: grid;
+  grid-template-columns: 2em 1fr;
+  grid-template-rows: max-content auto;
+  grid-column-gap: 0px;
+}
+.comment-tree-grid-container .parent-comment {
+  grid-area: 1/1/2/3;
+}
+.comment-tree-grid-container .divider {
+  grid-area: 2/1/3/2;
+  border-left: 2px solid hsl(223, 19%, 93%);
+  display: none;
+}
+.comment-tree-grid-container .child-comment-gridblock {
+  grid-area: 2/2/3/3;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.comment-tree-grid-container:has(.comment) {
+  grid-row-gap: 1em;
+}
+.comment-tree-grid-container:has(.comment) .divider {
+  display: block;
+}
+
 .comment {
   display: grid;
-  grid-template-columns: auto, min-content;
+  grid-template-columns: 1fr 2fr;
   grid-template-rows: repeat(3, min-content);
   grid-column-gap: 1em;
   grid-row-gap: 1em;
@@ -87,7 +123,7 @@ body {
   }
 }
 
-[class*=-gridblock] {
+.comment > [class*=-gridblock] {
   display: flex;
   flex-direction: row;
 }
@@ -99,6 +135,10 @@ body {
 .reply-bar-gridblock .reply-edit-bar > button:not(:last-child) {
   margin-right: 1em;
 }
+.reply-bar-gridblock .reply-edit-bar svg {
+  position: relative;
+  top: 2px;
+}
 
 .comment-meta {
   display: flex;
@@ -107,8 +147,10 @@ body {
   gap: 1em;
 }
 .comment-meta .user-avatar {
-  height: 40px;
-  width: 40px;
+  height: 30px;
+  width: 30px;
+  border-radius: 10em;
+  background-color: hsl(211, 10%, 45%);
 }
 .comment-meta .username {
   font-size: 16px;
@@ -118,12 +160,13 @@ body {
 .comment-meta .time-ago {
   font-size: 16px;
   color: hsl(211, 10%, 45%);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 button {
   border: none;
   background-color: transparent;
+  cursor: pointer;
 }
 
 .reply-btn, .vote-container {
@@ -165,6 +208,16 @@ button {
     min-width: 100%;
     min-height: 120px;
   }
+}
+
+.you-flag {
+  background-color: hsl(238, 40%, 52%);
+  font-size: 16px;
+  color: hsl(0, 0%, 100%);
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 4px;
+  padding: 0.2em 0.5em;
 }
 
 /*# sourceMappingURL=styles.css.map */
