@@ -1,7 +1,7 @@
 //Primaries
 $moderate-blue: hsl(238, 40%, 52%);
 $soft-red: hsl(358, 79%, 66%);
-$light-grayish-blue: hsl(239, 57%, 85%);
+$light-grayish-blue: hsl(239, 57%, 85%); //+/- btn
 $pale-red: hsl(357, 100%, 86%);
 
 //Neutrals
@@ -11,27 +11,6 @@ $light-gray: hsl(223, 19%, 93%);
 $very-light-gray: hsl(228, 33%, 97%);
 $white: hsl(0, 0%, 100%);
 
-* {
-    box-sizing: border-box;
-    padding: 0;
-    margin: 0;
-    font-family: "Rubik";
-    font-size: 16px;
-}
-p {
-    color: $grayish-blue;
-}
-
-@mixin flex-container {
-    display: flex;
-}
-@mixin vertical-flex {
-    @include flex-container;
-    flex-direction: column;
-}
-
-//Media query mixins, you can add these anywhere to make media-specific alterations
-//List of media breakpoints, assuming mobile first, the default will be smaller than 766
 $breakpoints: (
     'to-small'      : ( max-width:  766px ),
     'small'         : ( min-width:  767px ),
@@ -42,7 +21,8 @@ $breakpoints: (
     'to-x-large'    : ( min-width: 1599px ),
     'x-large'       : ( min-width: 1600px )
 );
-
+//Media query mixins, you can add these anywhere to make media-specific alterations
+//List of media breakpoints, assuming mobile first, the default will be smaller than 766
 @mixin media($breakpoint) {
     @if map-has-key($breakpoints, $breakpoint) {
         @media #{inspect(map-get($breakpoints, $breakpoint))} {
@@ -55,6 +35,178 @@ $breakpoints: (
             + "Please make sure it is defined in `$breakpoints` map.";
     }
 }
+@mixin flex-container ($direction: row){
+    display: flex;
+    flex-direction: $direction;
+}
+
+@mixin commentFormat($color: $grayish-blue, $weight:400){
+    font-size: 16px;
+    color: $color;
+    font-weight: $weight;
+
+}
+//End non-specific mixins here
+
+@mixin roundedEdges($roundness: 16px){
+    border-radius: $roundness;
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: "Rubik";
+    font-size: 16px;
+}
+p {
+    color: $grayish-blue;
+    line-height: 1.5em;
+}
+@mixin dontSquish {
+    flex:none;
+}
+//Mixin for text formatting
+
+
+body {
+    @include flex-container(column);
+    align-items: center;
+    background-color: $very-light-gray;
+}
+
+.main-page-container {
+    width:90%;
+    @include media('small') {
+        max-width: 70%;
+    }
+    @include media ('large'){
+        max-width: 60%;
+    }
+}
+
+.comment {
+    background-color: $white;
+    padding: 1em;
+    @include roundedEdges;
+    @include media('medium') {
+
+    }
+}
+
+//GRID DISPLAY FOR COMMENTS
+.comment {
+    display: grid;
+    grid-template-columns: auto, min-content;
+    grid-template-rows: repeat(3, min-content);
+    @include media('small'){
+        grid-template-columns: auto 1.5fr 1fr ;
+        grid-template-rows: min-content auto;
+    }
+    grid-column-gap: 1em;
+    grid-row-gap: 1em;
+}
+
+.vote-container-gridblock {
+    grid-area: 3 / 1 / 4 / 2;
+    @include media('small'){
+        grid-area: 1 / 1 / 3 / 2;
+    }
+}
+.comment-meta-gridblock {
+    grid-area: 1 / 1 / 2 / 3; 
+    @include media('small'){
+        grid-area: 1 / 2 / 2 / 3;
+    }
+}
+.reply-bar-gridblock {
+    grid-area: 3 / 2 / 4 / 3;
+    @include media('small'){
+        grid-area: 1 / 3 / 2 / 4;
+
+    }
+}
+.comment-content-gridblock {
+    grid-area: 2 / 1 / 3 / 3;
+    @include media('small'){
+        grid-area: 2 / 2 / 3 / 4;
+
+    }
+}
+
+
+[class*="-gridblock"]{
+    @include flex-container;
+}
+
+.reply-bar-gridblock {
+    align-items: center;
+    justify-content: flex-end;
+    .reply-edit-bar > button:not(:last-child){
+        margin-right: 1em;
+    }
+}
+//End Grid Display
+.comment-meta {
+    @include flex-container;
+    .user-avatar {
+        height: 40px;
+        width: 40px;
+    }
+    align-items: center;
+    gap: 1em;
+    .username {
+        @include commentFormat($dark-blue, 500);
+    }
+    .time-ago {
+        @include commentFormat($weight:500);
+    }
+}
+
+button {
+    border: none;
+    background-color: transparent;
+}
+
+.reply-btn, .vote-container {
+    color: $moderate-blue;
+    font-weight: 500;
+}
+.delete-btn {
+    color: $soft-red;
+    font-weight: 500;
+}
+.vote-container {
+    background-color: $light-gray;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5em;
+    min-width: 100px;
+    max-height: 120px;
+    .vote-btn {
+        height: 16px;
+        width: 16px;
+        @include flex-container;
+        align-items: center;
+    }
+    .btn-img {
+        margin: auto;
+        width: inherit;
+        height: auto;
+    }
+    @include roundedEdges(8px);
+    @include flex-container;
+    @include media ('small'){
+        flex-direction: column;
+        min-width: 100%;
+        min-height: 120px;
+
+    }
+}
+
+
+
+
 
 // this query will apply from widths larger then 1200px
 // meaning you have the same for mobile and tablet

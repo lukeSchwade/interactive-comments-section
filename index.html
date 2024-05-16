@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
   <title>Frontend Mentor | Interactive comments section</title>
 
 </head>
@@ -16,25 +17,51 @@
     <div id="Comments">
       <!-- Pull dynamic content from the data.json file -->
       <!-- PLACEHOLDER COMMENT TREE -->
-      <div class="comment-meta">
-        amyrobson 
-        1 month ago
-
-      </div>
-      <p class="comment-content">
-        Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. 
-        You've nailed the design and the responsiveness at various breakpoints works really well.
-      </p>
-        <div class="vote-container">
-          <button class="vote-btn plus">+</button>
-          <div class="comment-rating">12</div>
-          <button class="vote-btn minus">-</button>
+      <div class="comment">
+        <div class="comment-meta-gridblock">
+          <div class="comment-meta">
+            <img class="user-avatar" src="./images/avatars/image-amyrobson.png" alt="avatar">
+            <div class="username">amyrobson</div> 
+            <div class="time-ago">1 month ago</div>
+          </div>
         </div>
-        <button class="reply-button"><</button>
+        <div class="comment-content-gridblock">
+          <p class="comment-content">
+            Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. 
+            You've nailed the design and the responsiveness at various breakpoints works really well.
+          </p>
+        </div>
+          <div class="vote-container-gridblock">
+            <div class="vote-container">
+              <button class="vote-btn plus">
+                  <img class="btn-img" src="./images/icon-plus.svg" alt="plus button">
+              </button>
+              <div class="comment-rating">12</div>
+              <button class="vote-btn minus">
+                  <img class="btn-img" src="./images/icon-minus.svg" alt="minus button">
+              </button>
+            </div>
+          </div>
+          <div class="reply-bar-gridblock">
+            <div class="reply-edit-bar">
+              <button class="delete-btn">
+                <svg class="delete-icon" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.167 12.448c0 .854.7 1.552 1.555 1.552h6.222c.856 0 1.556-.698 1.556-1.552V3.5H1.167v8.948Zm10.5-11.281H8.75L7.773 0h-3.88l-.976 1.167H0v1.166h11.667V1.167Z" fill="#ED6368"/>
+                </svg>
+                Delete
+              </button>
+              <button class="reply-btn">
+                <svg class="reply-icon" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M.227 4.316 5.04.16a.657.657 0 0 1 1.085.497v2.189c4.392.05 7.875.93 7.875 5.093 0 1.68-1.082 3.344-2.279 4.214-.373.272-.905-.07-.767-.51 1.24-3.964-.588-5.017-4.829-5.078v2.404c0 .566-.664.86-1.085.496L.227 5.31a.657.657 0 0 1 0-.993Z" fill="#5357B6"/>
+                </svg>
+                Reply
+              </button>
+            </div>
+          </div>
+      </div>
     </div>
 
   </div>
-  
   
   <script src="./scripts.js"></script>
 </body>
