@@ -39,15 +39,15 @@ body {
   gap: 1.5em;
 }
 
-.comment {
+.comment, .add-comment-container {
   background-color: hsl(0, 0%, 100%);
   padding: 1em;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .comment-tree-grid-container {
   display: grid;
-  grid-template-columns: 2em 1fr;
+  grid-template-columns: 0.75em 1fr;
   grid-template-rows: max-content auto;
   grid-column-gap: 0px;
 }
@@ -65,11 +65,21 @@ body {
   flex-direction: column;
   gap: 1em;
 }
+@media (min-width: 767px) {
+  .comment-tree-grid-container {
+    grid-template-columns: 1em 1fr;
+  }
+}
+@media (min-width: 1200px) {
+  .comment-tree-grid-container {
+    grid-template-columns: 2em 1fr;
+  }
+}
 
-.comment-tree-grid-container:has(.comment) {
+.comment-tree-grid-container:has(.child-comment-gridblock > *) {
   grid-row-gap: 1em;
 }
-.comment-tree-grid-container:has(.comment) .divider {
+.comment-tree-grid-container:has(.child-comment-gridblock > *) .divider {
   display: block;
 }
 
@@ -82,7 +92,7 @@ body {
 }
 @media (min-width: 767px) {
   .comment {
-    grid-template-columns: auto 1.5fr 1fr;
+    grid-template-columns: auto 1.5fr max-content;
     grid-template-rows: min-content auto;
   }
 }
@@ -218,6 +228,143 @@ button {
   font-size: 14px;
   border-radius: 4px;
   padding: 0.2em 0.5em;
+}
+
+.add-comment-container {
+  display: grid;
+  grid-template-columns: min-content auto min-content;
+  grid-template-rows: max-content min-content;
+  grid-column-gap: 1em;
+  grid-row-gap: 1em;
+}
+@media (min-width: 767px) {
+  .add-comment-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 1em;
+  }
+}
+.add-comment-container .user-avatar {
+  grid-area: 2/1/3/2;
+  height: 40px;
+  width: 40px;
+}
+@media (min-width: 767px) {
+  .add-comment-container .user-avatar {
+    flex-basis: 40px;
+  }
+}
+.add-comment-container .add-comment__input-container {
+  grid-area: 1/1/2/4;
+}
+@media (min-width: 767px) {
+  .add-comment-container .add-comment__input-container {
+    flex-basis: auto;
+    width: 100%;
+    height: 100%;
+  }
+}
+.add-comment-container .add-comment__btn {
+  grid-area: 2/3/3/4;
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(238, 40%, 52%);
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75em 1.5em;
+  height: fit-content;
+}
+@media (min-width: 767px) {
+  .add-comment-container .add-comment__btn {
+    flex: 0 1 auto;
+  }
+}
+.add-comment-container .submit-comment__input {
+  padding: 0.5em 1.5em;
+  resize: none;
+  width: 100%;
+  height: 6em;
+  border-radius: 8px;
+  border: 1px solid hsl(223, 19%, 93%);
+}
+.add-comment-container .submit-comment__input:focus {
+  outline: 1px solid hsl(238, 40%, 52%);
+}
+
+.delete-comment-modal {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  background-color: rgba(0, 0, 0, 0.4);
+  width: 100%;
+  height: 100%;
+  align-content: center;
+}
+.delete-comment-modal .modal-content {
+  border-radius: 8px;
+  position: relative;
+  margin: auto;
+  background-color: hsl(0, 0%, 100%);
+  padding: 2em;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.2), 0 4px 20px 0 rgba(0, 0, 0, 0.19);
+}
+.delete-comment-modal h2 {
+  font-size: 20px;
+  color: hsl(212, 24%, 26%);
+}
+.delete-comment-modal p {
+  margin: 1em 0em;
+}
+.delete-comment-modal button {
+  padding: 1em 1.5em;
+  font-weight: 500;
+  flex: 1;
+}
+.delete-comment-modal .cancel-btn {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(211, 10%, 45%);
+  border-radius: 8px;
+}
+.delete-comment-modal .confirm-delete-btn {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(358, 79%, 66%);
+  border-radius: 8px;
+}
+.delete-comment-modal .delete-btn-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  justify-content: space-between;
+}
+
+button {
+  transition: all 150ms;
+  position: relative;
+}
+
+button:not(.vote-btn):hover {
+  filter: brightness(125%);
+}
+
+button:not(.vote-btn):active {
+  filter: brightness(80%);
+  transition-duration: 50ms;
+  top: 2px;
+}
+
+.vote-btn:hover {
+  filter: brightness(90%);
+  transform: scale(1.05);
+}
+
+.vote-btn:active {
+  filter: brightness(60%);
+  transition-duration: 50ms;
+  top: 2px;
 }
 
 /*# sourceMappingURL=styles.css.map */

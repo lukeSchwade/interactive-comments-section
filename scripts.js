@@ -26,3 +26,7 @@ const ifUser = () => {
     //return true
     //else return false
 }
+
+const openDeleteModal = () => {
+    
+}
