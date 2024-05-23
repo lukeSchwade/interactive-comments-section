@@ -10,8 +10,6 @@
 //By default, comments are appended to bottom of comment tree, clicking reply refocuses this
 let currentCommentFocus = document.getElementById('comments-section');
 
-
-
 const addReply = () => {
     //placeholder bugtest Function
     const parentContainerTemplate = document.getElementById('parent-container-template')
@@ -20,8 +18,77 @@ const addReply = () => {
     const templist = document.getElementsByClassName('comment-tree-grid-container');
     const appendHere = templist[templist.length - 1].getElementsByClassName('child-comment-gridblock')[0];
     appendHere.appendChild(clonedNode);
-    moveReplyCard(appendHere);
+    moveReplyCard(currentCommentFocus);
 }
+
+const buildComment = () => {
+    //Grab the template which includes the grid container
+    //Parent comments are appended to div "comments-section"
+    //replies are appended to child-comment-gridblock.
+    const commentTemplate = document.getElementById('parent-comment-template');
+    //foreach CommentData entry, run the recursive comment build
+    const parentComment = commentTemplate.content.cloneNode(true);
+
+}
+
+class Node {
+    constructor(val, data) {
+    this.key = val;
+    // all children are stored in an array
+    this.data = data;
+    this.children = [];
+    }
+}
+
+class GeneralTree {
+    constructor(){
+        this.root = null;
+    }
+    //Print each tree as a string in console
+    printTreeAsString() {
+        if (!this.root) throw new Error('Tree is empty')
+        
+        const getTreeString = (node = this.root, spaceCount = 0) => {
+          let treeString = "\n";
+    
+          node.replies.forEach((child) => {
+            treeString += `${" ".repeat(spaceCount)}● node | Username: ${child.user.username} - ${child.parentId} ${getTreeString(child, spaceCount + 4)}`
+          })
+    
+          return treeString
+        }
+        
+        return console.log(`\n ● node | Username: ${this.root.user.username} - ${this.root.username} ${getTreeString(this.root, 4)}`)
+      }
+      //Iterative pre-order Traversal
+      preOrderTraversalIterative(){
+        //Check empty tree
+        if (!this.root) throw new Error('Tree is empty')
+        // Create a stack to hold nodes to be processed and
+        // an array to hold the result of the traversal
+        const stack = [this.root];
+        const result = [];
+
+        //loop through the stack until all nodes have been processed
+        while (stack.length){
+            //Pop the last node from stack and add
+            const currentNode = stack.pop();
+            result.push(currentNode.data);
+            //We want to visit the leftmost child first, since the child array is stored
+            //in reverse order
+            //So we need to push them to stack in reverse
+            for (let i = currentNode.children.length -1; i >= 0; i--) {
+                stack.push(currentNode.children[i]);
+            }
+        }
+        return result;
+      }
+
+}
+
+
+
+     
 
 const checkIfUser = () => {
     //If the comment is created by the user,
@@ -56,20 +123,44 @@ const moveReplyCard = (target) => {
     target.appendChild(replyCard);
     //If you use After()you need to get the child to insert after
 }
-class comment {
+class Comment {
     //separate object for each comment
-    constructor (parentId) {
-        //store the parent id of the comment
+    constructor (parentId, id) {
+        //store the id and parent ID of the comment
         this.parentId = parentId;
-        //
+        this.id = id;
+        this.childComments = [];
+    }
+    addChild(){
+        //add a child to
     }
 }
 
-let commentData = null;
-fetchCommentData();
-// Fetch JSON data from a file
-async function fetchCommentData(){
 
+
+const initializePage = () => {
+    //do all the things that need to be done on pageload
+
+    //Traverse the array of comments
+    //For each comment entry
+    tree.root = commentData[1];
+    tree.printTreeAsString();
+    console.log('PRE-ORDER TRAVERSAL:')
+    tree.preOrderTraversalIterative();
+    //Build a comment
+    //Check if it has replies (recursively)
+    //
+}
+
+let commentData = null;
+let userData = null;
+const tree = new GeneralTree();
+fetchData();
+
+
+
+function fetchData(){
+    //Grab Comments data
      fetch('./data.json')
         //a then statement creates a chained "function" that passes return values ot next 'then'
         .then(response => {
@@ -80,12 +171,21 @@ async function fetchCommentData(){
         })
         //You can access a specific entry by title, or return the entire thing
         .then(data => {
-            
-            // Access a specific entry by title or ID
-            const specificEntry = data.find(entry => entry.title === 'Work');
-            commentData = data;
+            commentData = data.comments;
+
+            userData = data.currentUser;
+            //commentData = data;
+
         })
+        .then(initializePage)
         .catch(error => {
-            console.error('Error fetching JSON data:', error);
+            console.error('Error initializing comments:', error);
         });
 }
+
+//Possible design pattern
+//Each reply button onclick finds the closest ancestor using closest()
+//everything is calculated relative to that
+//EG you can insert the reply bar after the comment sibling, you can add the comment
+//after the page
+//Then separately add/delete entries to the data JSON

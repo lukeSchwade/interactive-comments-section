@@ -60,7 +60,50 @@
 
           </div>
         </div>
-        
+        <div class="comment-tree-grid-container">
+          <div class="comment parent-comment">
+            <div class="comment-meta-gridblock">
+              <div class="comment-meta">
+                <img class="user-avatar" src="./images/avatars/image-amyrobson.png" alt="avatar">
+                <div class="username">amyrobson</div> 
+                <div class="you-flag">you</div>
+                <div class="time-ago">1 month ago</div>
+              </div>
+            </div>
+            <div class="comment-content-gridblock">
+              <p class="comment-content">
+                Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. 
+                You've nailed the design and the responsiveness at various breakpoints works really well.
+              </p>
+            </div>
+              <div class="vote-container-gridblock">
+                <div class="vote-container">
+                  <button class="vote-btn plus">
+                      <img class="btn-img" src="./images/icon-plus.svg" alt="plus button">
+                  </button>
+                  <div class="comment-rating">12</div>
+                  <button class="vote-btn minus">
+                      <img class="btn-img" src="./images/icon-minus.svg" alt="minus button">
+                  </button>
+                </div>
+              </div>
+              <div class="reply-bar-gridblock">
+                <div class="reply-edit-bar">
+                  <button class="reply-btn">
+                    <svg class="reply-icon" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M.227 4.316 5.04.16a.657.657 0 0 1 1.085.497v2.189c4.392.05 7.875.93 7.875 5.093 0 1.68-1.082 3.344-2.279 4.214-.373.272-.905-.07-.767-.51 1.24-3.964-.588-5.017-4.829-5.078v2.404c0 .566-.664.86-1.085.496L.227 5.31a.657.657 0 0 1 0-.993Z" fill="#5357B6"/>
+                    </svg>
+                    Reply
+                  </button>
+                </div>
+              </div>
+          </div>
+          <div class="divider"></div>
+
+          <div class="child-comment-gridblock">
+
+          </div>
+        </div>
       <div id="reply-card" class="add-comment-container">
         <img class="user-avatar"src="./images/avatars/image-juliusomo.png" alt="your-avatar">
         <div class="add-comment__input-container">
@@ -86,16 +129,7 @@
   <button class="click-me" onclick="addReply()">Click me to add reply</button>
   <button class="open-modal delete-btn" onclick="document.querySelector('.delete-comment-modal').style.display='block'">Open delete Modal</button>
 <!-- TEMPLATES -->
-  <template id="parent-container-template">
-    <div class="comment-tree-grid-container">
-      
-      <div class="divider"></div>
 
-      <div class="child-comment-gridblock">
-
-      </div>
-    </div>
-  </template>
 
   <template id="parent-comment-template">
     <div class="comment-tree-grid-container">
@@ -109,8 +143,7 @@
         </div>
         <div class="comment-content-gridblock">
           <p class="comment-content">
-            Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. 
-            You've nailed the design and the responsiveness at various breakpoints works really well.
+            Text Comment.
           </p>
         </div>
           <div class="vote-container-gridblock">
@@ -144,7 +177,16 @@
     </div>
   </template>
 
+  <template id="parent-container-template">
+    <div class="comment-tree-grid-container">
+      
+      <div class="divider"></div>
 
+      <div class="child-comment-gridblock">
+
+      </div>
+    </div>
+  </template>
   <template id="comment-template">
     <div class="comment parent-comment">
       <div class="comment-meta-gridblock">
