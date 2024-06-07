@@ -18,7 +18,7 @@ const addReply = () => {
     //Append as child to lowest comment
     const appendHere = templist[templist.length - 1].getElementsByClassName('child-comment-gridblock')[0];
     const button = clonedNode.querySelector('.comment');
-    button.addEventListener('click', () => writeHi());
+    button.addEventListener('click', (e) => writeHi(e));
     appendHere.appendChild(clonedNode);
     //Move Reply Card to bottom
     moveReplyCard(currentCommentFocus);
@@ -26,10 +26,11 @@ const addReply = () => {
 
 
 class GeneralTree {
+    //A single tree of comments with a root parent and children
     constructor(){
         this.root = null;
     }
-    // Print each tree as a string in console
+
     printTreeAsString() {
         if (!this.root) throw new Error('Tree is empty')
         
@@ -87,16 +88,16 @@ class GeneralTree {
         const currentHTMLNode = buildComment(currentNode);
         
         //TODO THIS DOES NOT WORK
-        if (currentNode.parentId) {
-            // Parent comments are appended to div "comments-section"
-            parentNode.appendChild
-        } else {
-            // replies are appended to child-comment-gridblock of previous node
-            //Find the parentNode
-            //TODO THIS DOES NOT WORK
-            parentHTMLNode.querySelector('.child-comment-gridblock').appendChild(newHTMLNode);
+        // if (currentNode.parentId) {
+        //     // Parent comments are appended to div "comments-section"
+        //     parentNode.appendChild
+        // } else {
+        //     // replies are appended to child-comment-gridblock of previous node
+        //     //Find the parentNode
+        //     //TODO THIS DOES NOT WORK
+        //     parentHTMLNode.querySelector('.child-comment-gridblock').appendChild(newHTMLNode);
 
-        }
+        // }
 
         // Add the node's data to the result array
         result.push(currentNode.id);
@@ -149,13 +150,15 @@ const moveReplyCard = (target) => {
     // If you use After()you need to get the child to insert after
 }
 class CommentNode {
-    // separate object for each comment not currently used
+    //This is how I'm managing traversing the tree backwards
+    //It tracks ID, Parent ID
+    // with an associated DOM element 
     constructor (parentId, id, linkedNode) {
         // store the id and parent ID of the comment
         this.parentId = parentId;
         this.id = id;
         // If a comment doesnt have a parentID it is a root comment
-        this.isParent = !parentId ? 1 : 0;
+        this.isRoot = !parentId ? 1 : 0;
         // Attach an associated HTML node
         this.linkedNode = linkedNode;
     }
@@ -257,8 +260,15 @@ const initializeComments = async() => {
 }
 let userData;
 //Show the comment Section
-initializeComments();
+//initializeComments();
 
+const clearComments = () => {
+    element = document.getElementById('comments-section');
+    while(element.firstChild){
+
+        element.firstChild.remove();
+    }
+}
 
 //TODO
 
