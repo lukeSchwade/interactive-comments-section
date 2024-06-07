@@ -94,6 +94,7 @@ body {
   .comment {
     grid-template-columns: auto 1.5fr max-content;
     grid-template-rows: min-content auto;
+    grid-column-gap: 1.3em;
   }
 }
 
@@ -216,7 +217,8 @@ button {
   .vote-container {
     flex-direction: column;
     min-width: 100%;
-    min-height: 120px;
+    min-height: 100px;
+    max-height: 100px;
   }
 }
 
@@ -365,6 +367,10 @@ button:not(.vote-btn):active {
   filter: brightness(60%);
   transition-duration: 50ms;
   top: 2px;
+}
+
+.deleted-comment .comment-content, .deleted-comment .username {
+  opacity: 70%;
 }
 
 /*# sourceMappingURL=styles.css.map */

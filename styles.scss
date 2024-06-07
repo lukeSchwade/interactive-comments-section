@@ -148,12 +148,14 @@ body {
     display: grid;
     grid-template-columns: 1fr 2fr;
     grid-template-rows: repeat(3, min-content);
+    grid-column-gap: 1em;
+    grid-row-gap: 1em;
     @include media('small'){
         grid-template-columns: auto 1.5fr max-content ;
         grid-template-rows: min-content auto;
+        grid-column-gap: 1.3em;
     }
-    grid-column-gap: 1em;
-    grid-row-gap: 1em;
+
 }
 
 .vote-container-gridblock {
@@ -254,7 +256,8 @@ button {
     @include media ('small'){
         flex-direction: column;
         min-width: 100%;
-        min-height: 120px;
+        min-height: 100px;
+        max-height: 100px;
 
     }
 }
@@ -395,7 +398,11 @@ button:not(.vote-btn):active {
     top: 2px;
 }
 
-
+.deleted-comment {
+    .comment-content, .username {
+        opacity: 70%;
+    }
+}
 
 
 // this query will apply from widths larger then 1200px
