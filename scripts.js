@@ -29,6 +29,7 @@ class GeneralTree {
     //A single tree of comments with a root parent and children
     constructor(){
         this.root = null;
+        this.rootComment = null;
     }
 
     printTreeAsString() {
@@ -47,11 +48,11 @@ class GeneralTree {
         return console.log(`\n ● node | Username: ${this.root.user.username} - ${this.root.id} ${getTreeString(this.root, 4)}`)
         }
     // iterate over the tree (iterative pre-order Traversal)
-    preOrderTraversalIterative(){
-        //Check empty tree
+    preOrderTraversalIterative(appendHere){
         if (!this.root) throw new Error('Tree is empty')
+
         // Create a stack to hold nodes to be processed and
-        // an array to hold the result of the traversal
+        // an array to hold all the comments
         const stack = [this.root];
         const result = [];
 
@@ -59,7 +60,9 @@ class GeneralTree {
         while (stack.length){
             // Pop the last node from stack and do something with it
             const currentNode = stack.pop();
+            const currentHTMLNode = buildComment(currentNode);
             result.push(currentNode.id);
+            console.log(currentNode.id);
             // buildComment(currentNode);
             // We want to visit the leftmost child first, since the child array is stored
             // in reverse order
@@ -71,49 +74,52 @@ class GeneralTree {
         return result;
     }
     // iterate over the tree recursively (useful for building comment tree at first)
-    preOrderTraversalRecursive() {
-        // Check if the tree is empty
+    preOrderTraversalRecursive(appendHere) {
+        //appendHere is where the fully-built tree must be appended at the end
+        //usually to the comment section container (maybe not if loading more comments?)
+
         if (!this.root) throw new Error('Tree is empty')
 
         // Create an array to hold the result of the traversal
+        //And an array to hold all the comment HTML nodes
         const result = []
         // recursive helper to traverse the tree
-        //Build the first node
-        let rootComment;
         function traverse(currentNode, parentNode) {
-        // If the current node is null, exit
-        if (!currentNode) return;
+            // If the current node is null, exit
+            if (!currentNode) return;
 
-        // build a comment based on current node
-        const currentHTMLNode = buildComment(currentNode);
-        
-        //TODO THIS DOES NOT WORK
-        // if (currentNode.parentId) {
-        //     // Parent comments are appended to div "comments-section"
-        //     parentNode.appendChild
-        // } else {
-        //     // replies are appended to child-comment-gridblock of previous node
-        //     //Find the parentNode
-        //     //TODO THIS DOES NOT WORK
-        //     parentHTMLNode.querySelector('.child-comment-gridblock').appendChild(newHTMLNode);
-
-        // }
-
-        // Add the node's data to the result array
-        result.push(currentNode.id);
-        if (!currentNode.replies.length)
-        // Recursively traverse each of the node's children
-        for (const childNode of currentNode.replies) {
-            traverse(childNode, newHTMLNode);
+            console.log(`build comment ${currentNode.id} here`);
+            let builtComment = buildComment(currentNode);
+            const appendTarget = builtComment.querySelector('.child-comment-gridblock');
+            // Add the node to the result array
+            result.push(builtComment);
+            // Recursively traverse each of the node's children
+            for (const childNode of currentNode.replies) {
+                appendTarget.appendChild(traverse(childNode, builtComment));
             }
+            //as the loop bubbles back, append each built comment to it's parent in previous scope
+            if (!currentNode.parentId) {
+                console.log("root comment is appended to DOM here");
+                appendHere.appendChild(builtComment);
+            } else if (currentNode.parentId) {
+                console.log(`Append node ${currentNode.id} to ${currentNode.parentId} here`);
+                //parentNode.appendChild(builtComment);
+                return builtComment;
+                //appendTarget 
+            }
+            return builtComment;
         }
 
         // Call the helper with the root node to start the traversal
-        traverse(this.root, null);
+        const finalHTMLnode = traverse(this.root, commentsContainer);
 
         //Append the full tree to the comment container
-        commentsContainer.appendChild(rootComment);
+        //commentsContainer.appendChild(finalHTMLnode);
         return result;
+        //appendHere.appendChild
+    }
+    buildCommentTree (AppendTarget, commentList){
+
     }
 
 }
@@ -142,11 +148,12 @@ const deleteComment = () => {
 }
 
 
-const moveReplyCard = (target) => {
-    // if the currentCommentfocus is the comment section moves replycard to bottom of comments
+const moveReplyCard = (targetNode) => {
+    // if the currentCommentfocus is the comment section moves replycard to top of comments
     const replyCard = document.getElementById('reply-card');
     // target.appendChild(replyCard);
-    target.appendChild(replyCard);
+    if (targetNode)
+    targetNode.insertBefore(replyCard, targetNode.firstChild);
     // If you use After()you need to get the child to insert after
 }
 class CommentNode {
@@ -181,8 +188,8 @@ const generateCommentTrees = (element, index, parentArray) => {
 }
 
 const buildComment = (currentNode) => {
-
     let commentTemplate;
+    //Comments made by current user have different buttons
     if (isCurrentUser(currentNode.user.username)) {
         commentTemplate = document.getElementById('you-parent-comment-template');
     } else {
@@ -190,12 +197,17 @@ const buildComment = (currentNode) => {
     }
 
     const clonedComment = commentTemplate.content.cloneNode(true);
-    // Add correct content
+    const commentContainer = clonedComment.querySelector('.parent-comment');
     clonedComment.querySelector('.comment-content').textContent = currentNode.content;
     clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
     clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
     clonedComment.querySelector('.time-ago').textContent = currentNode.createdAt;
+
+    //Add Deleted CSS flag to comment if it's deleted
+    if (clonedComment.querySelector('.username').textContent == 'Deleted') {
+        commentContainer.classList.add('deleted-comment');
+    }
     // Add EventListeners to node to buttons
     const upvoteBtn = clonedComment.querySelector('.vote-btn.plus');
     upvoteBtn.addEventListener('click', (evt) => {
@@ -223,6 +235,12 @@ const buildComment = (currentNode) => {
     }
     return clonedComment;
 }
+
+const buildReplyCard = () => {
+    const replyCardTemplate = document.getElementById('reply-card-template');
+    const clonedCard = replyCardTemplate.content.cloneNode(true);
+    clonedCard.querySelector('.user-avatar').src = `${userData.image.png}`;
+}
 const renderComments = () => {
     // iterate through all the comments in comment database and add them
 }
@@ -240,22 +258,21 @@ const initializeComments = async() => {
     }
     // Seperate json data into userData and commentData
     // TODO split currentUser and comments into separate files and change this logic
-    const result = await fetchData2();
-    const userData = result.currentUser;
+    const dataResult = await fetchData2();
+    const userData = dataResult.currentUser;
     sessionStorage.setItem("username", userData.username);
-    const commentData = result.comments;
-    const parentComments = [];
-    // For each parent comment
-    // Create a new General Tree, place it in the tree array
-    // Iterate through the comments, building a new comment for each node
+    const commentData = dataResult.comments;
+   
     const tree = new GeneralTree();
     // Create array of commentTrees
     const commentTrees = [];
     tree.root = commentData[1];
     tree.printTreeAsString();
     console.log('PRE-ORDER TRAVERSAL:');
-    tree.preOrderTraversalRecursive();
-    moveReplyCard(commentsContainer);
+    //For root comments they're appended to the comment container
+    //const TestResult = tree.preOrderTraversalIterative(commentsContainer);
+    const testResult = tree.preOrderTraversalRecursive(commentsContainer);
+    //moveReplyCard(commentsContainer);
 
 }
 let userData;
@@ -265,7 +282,6 @@ let userData;
 const clearComments = () => {
     element = document.getElementById('comments-section');
     while(element.firstChild){
-
         element.firstChild.remove();
     }
 }
