@@ -9,6 +9,7 @@
 //global variable to keep track of where to append new comments, which comment to delete, etc.
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
+const commentsList = [];
 const addReply = () => {
     //placeholder bugtest Function
     const commentTemplate = document.getElementById('you-parent-comment-template');
@@ -124,7 +125,7 @@ class GeneralTree {
 
 }
 const replyClick = () => {
-
+    //Create a type window, and place it under the current comment
 }
 const isCurrentUser = (input) => {
     // Check if a variable is current user
@@ -152,14 +153,11 @@ const moveReplyCard = (targetNode) => {
     // if the currentCommentfocus is the comment section moves replycard to top of comments
     const replyCard = document.getElementById('reply-card');
     // target.appendChild(replyCard);
-    if (targetNode)
     targetNode.insertBefore(replyCard, targetNode.firstChild);
     // If you use After()you need to get the child to insert after
 }
 class CommentNode {
-    //This is how I'm managing traversing the tree backwards
-    //It tracks ID, Parent ID
-    // with an associated DOM element 
+    //Tracks ID and Parent ID with associated HTML node
     constructor (parentId, id, linkedNode) {
         // store the id and parent ID of the comment
         this.parentId = parentId;
@@ -245,6 +243,9 @@ const renderComments = () => {
     // iterate through all the comments in comment database and add them
 }
 
+//I have to figure out how to associate specific comments with unique IDs after I've rendered them
+const CommentsData = [];
+
 
 const initializeComments = async() => {
     // Fetch the comment Data from server
@@ -263,15 +264,28 @@ const initializeComments = async() => {
     sessionStorage.setItem("username", userData.username);
     const commentData = dataResult.comments;
    
-    const tree = new GeneralTree();
-    // Create array of commentTrees
-    const commentTrees = [];
-    tree.root = commentData[1];
-    tree.printTreeAsString();
-    console.log('PRE-ORDER TRAVERSAL:');
+    
+    //Create seperate generalTree obj for each Comment Tree
+    const treeArrays = [];
+    commentData.forEach( (el, index) => {
+        treeArrays.push(new GeneralTree());
+        treeArrays[index].root = commentData[index];
+    })
+    for (const tree of treeArrays) {
+        tree.printTreeAsString();
+        tree.preOrderTraversalRecursive(commentsContainer);
+        
+    }
+    moveReplyCard(commentsContainer);
+        
+    //Bugtest
+    //const tree = new GeneralTree();
+    // tree.root = commentData[1];
+    // tree.printTreeAsString();
+    // console.log('PRE-ORDER TRAVERSAL:');
     //For root comments they're appended to the comment container
     //const TestResult = tree.preOrderTraversalIterative(commentsContainer);
-    const testResult = tree.preOrderTraversalRecursive(commentsContainer);
+    //const testResult = tree.preOrderTraversalRecursive(commentsContainer);
     //moveReplyCard(commentsContainer);
 
 }
@@ -280,10 +294,12 @@ let userData;
 //initializeComments();
 
 const clearComments = () => {
-    element = document.getElementById('comments-section');
-    while(element.firstChild){
-        element.firstChild.remove();
+    elements = document.getElementsByClassName('comment-tree-grid-container');
+    while (elements.length > 0) {
+        elements.firstChild.remove();
     }
+
+        
 }
 
 //TODO
