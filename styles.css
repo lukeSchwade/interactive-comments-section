@@ -281,7 +281,8 @@ button {
     flex: 0 1 auto;
   }
 }
-.add-comment-container .submit-comment__input {
+
+.submit-comment__input {
   padding: 0.5em 1.5em;
   resize: none;
   width: 100%;
@@ -289,7 +290,8 @@ button {
   border-radius: 8px;
   border: 1px solid hsl(223, 19%, 93%);
 }
-.add-comment-container .submit-comment__input:focus {
+
+.submit-comment__input:focus {
   outline: 1px solid hsl(238, 40%, 52%);
 }
 

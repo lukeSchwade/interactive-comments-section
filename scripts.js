@@ -11,6 +11,8 @@ let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
 const commentsList = [];
 let currentUser = null;
+//global variable for saving text when editing comment
+let savedText = '';
 
 const addReply = () => {
     //placeholder bugtest Function
@@ -127,7 +129,7 @@ class GeneralTree {
 
 }
 const replyClick = (targetButton) => {
-    //Create a type window, and place it under the Selected comment
+    //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
     const targetComment = targetButton.closest('.comment');
     const closestParentContainer = targetComment.closest('.comment-tree-grid-container');
     const closestChildContainer = closestParentContainer.querySelector('.child-comment-gridblock');
@@ -138,10 +140,19 @@ const replyClick = (targetButton) => {
     } else {
         replyCard = document.getElementById('reply-card-inline');
     }
-   closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
+    closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
     replyCard.querySelector('textarea').focus()
 }
 
+const editClick = (targetButton) => {
+    const currentComment = targetButton.closest('.comment');
+    const newTypeFragment = document.createElement
+    //Saved comment text in case it gets lost
+    savedText = currentComment.querySelector('.comment-content').textContent;
+    const clonedComment = commentTemplate.content.cloneNode(true);
+
+
+}
 const submitComment = () => {
     //Check for innuendos
     //Apply it to the frontEnd
@@ -157,16 +168,18 @@ const isAdmin = () => {
     return false;
 }
 
-const openDeleteModal = (currentComment) => {
-    document.querySelector('.delete-comment-modal').style.display='block'
-    document.querySelector ('.confirm-delete-btn').addEventListener ( (e) => {})
-    document.querySelector ('.')
+const openDeleteModal = (currentButton) => {
+    document.querySelector('.delete-comment-modal').style.display='block';
+    const CurrentComent = currentButton.closest('.comment');
+    document.querySelector ('.confirm-delete-btn').addEventListener ( (currentComment) => {})
+    document.querySelector ('delete-comment-modal .cancel-btn');
 }
 
 const deleteComment = () => {
     // Delete the comment, still leaving its place in the tree
     // if it was deleted by admin, write "deleted by admin"
     // Otherwise deleted by user
+    //TODO Requires server response
 }
 
 const moveReplyCard = (targetNode) => {
@@ -226,19 +239,18 @@ const buildComment = (currentNode) => {
         const deleteBtn = clonedComment.querySelector('.delete-btn');
         deleteBtn.addEventListener('click', (evt) => {
             console.log(evt);
-            //openDeleteModal(evt.)
+            openDeleteModal(evt.srcElement);
         });
         // Edit button
         const editBtn = clonedComment.querySelector('.reply-btn');
         editBtn.addEventListener('click', (evt) => {
-            console.log(evt);
+            editClick(evt.srcElement);
         });
     } else {
         const replyBtn = clonedComment.querySelector('.reply-btn');
         replyBtn.addEventListener('click', (evt) => {
-            console.log(evt.srcElement);
             replyClick(evt.srcElement);
-            //replyBtn
+            
         });
     }
     return clonedComment;
