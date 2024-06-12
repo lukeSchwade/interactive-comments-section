@@ -10,6 +10,8 @@
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
 const commentsList = [];
+let currentUser = null;
+
 const addReply = () => {
     //placeholder bugtest Function
     const commentTemplate = document.getElementById('you-parent-comment-template');
@@ -124,8 +126,26 @@ class GeneralTree {
     }
 
 }
-const replyClick = () => {
-    //Create a type window, and place it under the current comment
+const replyClick = (targetButton) => {
+    //Create a type window, and place it under the Selected comment
+    const targetComment = targetButton.closest('.comment');
+    const closestParentContainer = targetComment.closest('.comment-tree-grid-container');
+    const closestChildContainer = closestParentContainer.querySelector('.child-comment-gridblock');
+    let replyCard;
+    if (!document.getElementById('reply-card-inline')) {
+        replyCard = buildReplyCard();
+
+    } else {
+        replyCard = document.getElementById('reply-card-inline');
+    }
+   closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
+    replyCard.querySelector('textarea').focus()
+}
+
+const submitComment = () => {
+    //Check for innuendos
+    //Apply it to the frontEnd
+    //TODO Update the server
 }
 const isCurrentUser = (input) => {
     // Check if a variable is current user
@@ -137,9 +157,10 @@ const isAdmin = () => {
     return false;
 }
 
-const openDeleteModal = () => {
-    // Open the delete modal for corresponding comment
-    // Add event listener for the delete comment corresponding to the comment
+const openDeleteModal = (currentComment) => {
+    document.querySelector('.delete-comment-modal').style.display='block'
+    document.querySelector ('.confirm-delete-btn').addEventListener ( (e) => {})
+    document.querySelector ('.')
 }
 
 const deleteComment = () => {
@@ -147,7 +168,6 @@ const deleteComment = () => {
     // if it was deleted by admin, write "deleted by admin"
     // Otherwise deleted by user
 }
-
 
 const moveReplyCard = (targetNode) => {
     // if the currentCommentfocus is the comment section moves replycard to top of comments
@@ -167,23 +187,10 @@ class CommentNode {
         // Attach an associated HTML node
         this.linkedNode = linkedNode;
     }
-    addChild(child){
-        // add a child to this Comment Node
-    }
-    deleteComment(){
-        // Open the Modal
-
-    }
 
 }
 
-const writeHi = () => {
-    console.log('hi');
-}
 
-const generateCommentTrees = (element, index, parentArray) => {
-    // Generate new node tree (not necessary?)
-}
 
 const buildComment = (currentNode) => {
     let commentTemplate;
@@ -219,6 +226,7 @@ const buildComment = (currentNode) => {
         const deleteBtn = clonedComment.querySelector('.delete-btn');
         deleteBtn.addEventListener('click', (evt) => {
             console.log(evt);
+            //openDeleteModal(evt.)
         });
         // Edit button
         const editBtn = clonedComment.querySelector('.reply-btn');
@@ -228,7 +236,9 @@ const buildComment = (currentNode) => {
     } else {
         const replyBtn = clonedComment.querySelector('.reply-btn');
         replyBtn.addEventListener('click', (evt) => {
-            console.log(evt);
+            console.log(evt.srcElement);
+            replyClick(evt.srcElement);
+            //replyBtn
         });
     }
     return clonedComment;
@@ -237,7 +247,8 @@ const buildComment = (currentNode) => {
 const buildReplyCard = () => {
     const replyCardTemplate = document.getElementById('reply-card-template');
     const clonedCard = replyCardTemplate.content.cloneNode(true);
-    clonedCard.querySelector('.user-avatar').src = `${userData.image.png}`;
+    clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
+    return clonedCard;
 }
 const renderComments = () => {
     // iterate through all the comments in comment database and add them
@@ -261,6 +272,8 @@ const initializeComments = async() => {
     // TODO split currentUser and comments into separate files and change this logic
     const dataResult = await fetchData2();
     const userData = dataResult.currentUser;
+    //Will Change this when I have new system (random generated profile pics with slightly diff colors)
+    currentUser = dataResult.currentUser;
     sessionStorage.setItem("username", userData.username);
     const commentData = dataResult.comments;
    

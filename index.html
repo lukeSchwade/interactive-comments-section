@@ -14,7 +14,7 @@
 </head>
 <body>
   <main class="main-page-container">
-    <div id="comments-section">
+    <div id="comments-section" class="comment-wrapper">
       <!-- Pull dynamic content from the data.json file -->
         <!-- <div class="comment-tree-grid-container">
           <div class="comment parent-comment">
@@ -215,7 +215,7 @@
   </main>
   <button class="click-me" onclick="addReply()">Click me to add reply</button>
   <button class="open-modal delete-btn" onclick="document.querySelector('.delete-comment-modal').style.display='block'">Open delete Modal</button>
-  <button class="click-me" onclick="initializeComments()">Click me to initialize Comments</button>
+  <button class="click-me" onclick="initializeComments();">Click me to initialize Comments</button>
 <!-- TEMPLATES -->
 
 
@@ -259,7 +259,7 @@
       </div>
       <div class="divider"></div>
 
-      <div class="child-comment-gridblock">
+      <div class="child-comment-gridblock comment-wrapper">
 
       </div>
     </div>
@@ -311,7 +311,7 @@
       </div>
       <div class="divider"></div>
 
-      <div class="child-comment-gridblock">
+      <div class="child-comment-gridblock comment-wrapper">
 
       </div>
     </div>
@@ -322,14 +322,14 @@
       
       <div class="divider"></div>
 
-      <div class="child-comment-gridblock">
+      <div class="child-comment-gridblock comment-wrapper">
 
       </div>
     </div>
   </template>
 
   <template id="reply-card-template">
-    <div id="reply-card" class="add-comment-container">
+    <div id="reply-card-inline" class="add-comment-container inline-reply-container">
       <img class="user-avatar"src="./images/avatars/image-juliusomo.png" alt="your-avatar">
       <div class="add-comment__input-container">
         <label class="add-comment__label" for="add-comment"></label>
