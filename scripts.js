@@ -273,7 +273,7 @@ const CommentsData = [];
 const initializeComments = async() => {
     // Fetch the comment Data from server
     const fetchData2 = async () => {
-        return fetch('/data.json')
+        return fetch('./data.json')
         // JSONify the response
         .then(res => res.json())
         // return the data
