@@ -11,8 +11,9 @@ let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
 const commentsList = [];
 let currentUser = null;
-//global variable for saving text when editing comment
+//global variable for saving text and node when editing comment
 let savedText = '';
+let savedTextArea;
 
 const addReply = () => {
     //placeholder bugtest Function
@@ -145,12 +146,15 @@ const replyClick = (targetButton) => {
 }
 
 const editClick = (targetButton) => {
-    const currentComment = targetButton.closest('.comment');
-    const newTypeFragment = document.createElement
+    const focusedComment = targetButton.closest('.comment');
     //Saved comment text in case it gets lost
+    //Create Textarea
+    const newTextArea = document.createElement("textarea");
+    //Create SubmitEditButton
     savedText = currentComment.querySelector('.comment-content').textContent;
-    const clonedComment = commentTemplate.content.cloneNode(true);
 
+    focusedComment.querySelector('.comment-content')
+    //TODO: FINISH THIS
 
 }
 const submitComment = () => {

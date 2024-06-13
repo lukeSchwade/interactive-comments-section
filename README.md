@@ -58,6 +58,7 @@ Users should be able to:
 I learned how to use SASS mixins for media breakpoints, which was tremendously useful
 I learned about `<slot>` and `<template>` for creating comment templates which were useful for creating modular elements, presumably this is handled by JS frameworks though.
 I also learned how incredibly useful grid layouts are for mobile-first.
+I got deep into data structures traversing, and recursion for the purpose of drawing comments
 
 
 
