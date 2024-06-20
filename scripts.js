@@ -15,20 +15,7 @@ let currentUser = null;
 let savedText = '';
 let savedTextArea;
 
-const addReply = () => {
-    //placeholder bugtest Function
-    const commentTemplate = document.getElementById('you-parent-comment-template');
-    //Create cloned fragment of template
-    const clonedNode = commentTemplate.content.cloneNode(true);
-    const templist = document.getElementsByClassName('comment-tree-grid-container');
-    //Append as child to lowest comment
-    const appendHere = templist[templist.length - 1].getElementsByClassName('child-comment-gridblock')[0];
-    const button = clonedNode.querySelector('.comment');
-    button.addEventListener('click', (e) => writeHi(e));
-    appendHere.appendChild(clonedNode);
-    //Move Reply Card to bottom
-    moveReplyCard(currentCommentFocus);
-}
+
 
 
 class GeneralTree {
@@ -84,11 +71,7 @@ class GeneralTree {
         //appendHere is where the fully-built tree must be appended at the end
         //usually to the comment section container (maybe not if loading more comments?)
 
-        if (!this.root) throw new Error('Tree is empty')
-
-        // Create an array to hold the result of the traversal
-        //And an array to hold all the comment HTML nodes
-        const result = []
+        if (!this.root) throw new Error('Tree is empty');   
         // recursive helper to traverse the tree
         function traverse(currentNode, parentNode) {
             // If the current node is null, exit
@@ -98,20 +81,17 @@ class GeneralTree {
             let builtComment = buildComment(currentNode);
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
-            result.push(builtComment);
             // Recursively traverse each of the node's children
             for (const childNode of currentNode.replies) {
+                //as the loop bubbles back, append each built comment to it's parent in previous scope
                 appendTarget.appendChild(traverse(childNode, builtComment));
             }
-            //as the loop bubbles back, append each built comment to it's parent in previous scope
             if (!currentNode.parentId) {
                 console.log("root comment is appended to DOM here");
                 appendHere.appendChild(builtComment);
             } else if (currentNode.parentId) {
                 console.log(`Append node ${currentNode.id} to ${currentNode.parentId} here`);
-                //parentNode.appendChild(builtComment);
                 return builtComment;
-                //appendTarget 
             }
             return builtComment;
         }
@@ -119,15 +99,9 @@ class GeneralTree {
         // Call the helper with the root node to start the traversal
         const finalHTMLnode = traverse(this.root, commentsContainer);
 
-        //Append the full tree to the comment container
-        //commentsContainer.appendChild(finalHTMLnode);
-        return result;
-        //appendHere.appendChild
-    }
-    buildCommentTree (AppendTarget, commentList){
 
+        return;
     }
-
 }
 const replyClick = (targetButton) => {
     //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
@@ -135,6 +109,7 @@ const replyClick = (targetButton) => {
     const closestParentContainer = targetComment.closest('.comment-tree-grid-container');
     const closestChildContainer = closestParentContainer.querySelector('.child-comment-gridblock');
     let replyCard;
+    //Create a new moving reply card if there isn't one already (the one at top does not move inline)
     if (!document.getElementById('reply-card-inline')) {
         replyCard = buildReplyCard();
 
@@ -146,11 +121,7 @@ const replyClick = (targetButton) => {
 }
 
 const editClick = (targetButton) => {
-    const focusedComment = targetButton.closest('.comment');
-    //Saved comment text in case it gets lost
-    //Create Textarea
-    const newTextArea = document.createElement("textarea");
-    //Create SubmitEditButton
+    //Hide the Comment Content and unhide the TypeArea and resubmit button
     savedText = currentComment.querySelector('.comment-content').textContent;
 
     focusedComment.querySelector('.comment-content')
@@ -193,21 +164,6 @@ const moveReplyCard = (targetNode) => {
     targetNode.insertBefore(replyCard, targetNode.firstChild);
     // If you use After()you need to get the child to insert after
 }
-class CommentNode {
-    //Tracks ID and Parent ID with associated HTML node
-    constructor (parentId, id, linkedNode) {
-        // store the id and parent ID of the comment
-        this.parentId = parentId;
-        this.id = id;
-        // If a comment doesnt have a parentID it is a root comment
-        this.isRoot = !parentId ? 1 : 0;
-        // Attach an associated HTML node
-        this.linkedNode = linkedNode;
-    }
-
-}
-
-
 
 const buildComment = (currentNode) => {
     let commentTemplate;
@@ -266,14 +222,24 @@ const buildReplyCard = () => {
     clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
     return clonedCard;
 }
-const renderComments = () => {
-    // iterate through all the comments in comment database and add them
-}
+
 
 //I have to figure out how to associate specific comments with unique IDs after I've rendered them
 const CommentsData = [];
 
+class CommentNode {
+    //Tracks ID and Parent ID with associated HTML node
+    constructor (parentId, id, linkedNode) {
+        // store the id and parent ID of the comment
+        this.parentId = parentId;
+        this.id = id;
+        // If a comment doesnt have a parentID it is a root comment
+        this.isRoot = !parentId ? 1 : 0;
+        // Attach an associated HTML node
+        this.linkedNode = linkedNode;
+    }
 
+}
 const initializeComments = async() => {
     // Fetch the comment Data from server
     const fetchData2 = async () => {
@@ -303,7 +269,6 @@ const initializeComments = async() => {
     for (const tree of treeArrays) {
         tree.printTreeAsString();
         tree.preOrderTraversalRecursive(commentsContainer);
-        
     }
     moveReplyCard(commentsContainer);
         
@@ -322,6 +287,7 @@ let userData;
 //Show the comment Section
 //initializeComments();
 
+// Bugtest Stuff
 const clearComments = () => {
     elements = document.getElementsByClassName('comment-tree-grid-container');
     while (elements.length > 0) {
@@ -331,9 +297,23 @@ const clearComments = () => {
         
 }
 
+const addReply = () => {
+    //placeholder bugtest Function
+    const commentTemplate = document.getElementById('you-parent-comment-template');
+    //Create cloned fragment of template
+    const clonedNode = commentTemplate.content.cloneNode(true);
+    const templist = document.getElementsByClassName('comment-tree-grid-container');
+    //Append as child to lowest comment
+    const appendHere = templist[templist.length - 1].getElementsByClassName('child-comment-gridblock')[0];
+    const button = clonedNode.querySelector('.comment');
+    button.addEventListener('click', (e) => writeHi(e));
+    appendHere.appendChild(clonedNode);
+    //Move Reply Card to bottom
+    moveReplyCard(currentCommentFocus);
+}
+
 //TODO
 
-//NEED to figure out a way to attach nodes to parent nodes inside the traversal function
 //When the state changes, read all the comments and update the Data file
 //Add way to add comment to node tree and Database simultaneously
 
@@ -347,31 +327,6 @@ const clearComments = () => {
 
 //fetchData();
 
-
-
-// function fetchData(){
-//     //Grab Comments data
-//      fetch('./data.json')
-//         //a then statement creates a chained "function" that passes return values ot next 'then'
-//         .then(response => {
-//             if (!response.ok) {
-//             throw new Error('Network response was not ok');
-//             }
-//             return response.json();
-//         })
-//         //You can access a specific entry by title, or return the entire thing
-//         .then(data => {
-//             commentData = data.comments;
-
-//             userData = data.currentUser;
-//             //commentData = data;
-
-//         })
-//         .then(initializePage)
-//         .catch(error => {
-//             console.error('Error initializing comments:', error);
-//         });
-// }
  //Possible design pattern
 //Each reply button onclick finds the closest ancestor using closest()
 //everything is calculated relative to that
