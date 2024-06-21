@@ -24,12 +24,12 @@ class CommentTemplate {
     constructor(content){
         this.content = content;
         this.score = 0;
-        this.createdAt = 0; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
+        this.createdAt = 'x days ago'; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
         this.username = sessionStorage.getItem('username');
         //CHANGE WHEN USING NEW USERNAME SYSTEM
         this.user = {
             username: sessionStorage.getItem('username'),
-            image: userData.image.png    
+            image: userData.image   
         };
 
     }
@@ -120,12 +120,7 @@ const editClick = (targetButton) => {
     //TODO: FINISH THIS
 
 }
-const submitComment = () => {
-    //Check for innuendos
-    //Build the HTML element
 
-    //SEND A SERVER UPDATE HERE
-}
 
 
 const isCurrentUser = (input) => {
@@ -160,10 +155,25 @@ const moveReplyCard = (targetNode) => {
     // If you use After()you need to get the child to insert after
 }
 
-const buildUserReplyNode = (content) =>{
+const buildUserReplyNode = (content) => {
     return new CommentTemplate(content);
 }
+const submitReply = (targetButton) => {
+    //Check for innuendos
+    //Build the HTML element
+    //Grab the reply window
+    const replyWindow = targetButton.closest('.inline-reply-container'); 
+    const parentWrapper = replyWindow.closest('.child-comment-gridblock')
+    const newContent = replyWindow.querySelector('.submit-comment__input').value;
+    const newNode = buildUserReplyNode(newContent);
+    const newComment = buildComment(newNode);
+    parentWrapper.insertBefore(newComment, replyWindow);
+    //SEND SERVER UPDATE HERE
+    replyWindow.remove();
 
+
+    //SEND A SERVER UPDATE HERE
+}
 class upvoteHandler {
     //Attached to every upvote widget and manages the votes
     constructor (buttonWidget, id) {
@@ -269,9 +279,9 @@ const buildReplyCard = () => {
     const replyCardTemplate = document.getElementById('reply-card-template');
     const clonedCard = replyCardTemplate.content.cloneNode(true);
     clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
-    const submitReply = clonedCard.querySelector('.add-comment__btn');
-    submitReply.addEventListener('click', (evt) => {
-        submitComment(evt.srcElement);
+    const submitReplyBtn = clonedCard.querySelector('.add-comment__btn');
+    submitReplyBtn.addEventListener('click', (evt) => {
+        submitReply(evt.srcElement);
         console.log("hi");
     });
     return clonedCard;
