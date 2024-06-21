@@ -16,7 +16,22 @@ let savedText = '';
 let savedTextArea;
 
 
+class CommentData {
+    //Class for a comment data for purpose of building replies
+    //it mirrors the same format as a comment from the database
+    constructor(content){
+        this.content = content;
+        this.score = 0;
+        this.createdAt = 0; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
+        this.username = sessionStorage.getItem('username');
+        //CHANGE WHEN USING NEW USERNAME SYSTEM
+        this.user = {
+            username: sessionStorage.getItem('username'),
+            image: userData.image.png    
+        };
 
+    }
+}
 
 class GeneralTree {
     //A single tree of comments with a root parent and children
@@ -114,10 +129,12 @@ const replyClick = (targetButton) => {
         replyCard = buildReplyCard();
 
     } else {
+        // This is here bc if it doesn't find it it throws an error and doesnt focus properly
         replyCard = document.getElementById('reply-card-inline');
     }
     closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
-    replyCard.querySelector('textarea').focus()
+    replyCard = document.getElementById('reply-card-inline');
+    replyCard.querySelector('textarea').focus();
 }
 
 const editClick = (targetButton) => {
@@ -165,7 +182,9 @@ const moveReplyCard = (targetNode) => {
     // If you use After()you need to get the child to insert after
 }
 
+//Func for building comments from reply
 const buildComment = (currentNode) => {
+    //isReply is a boolean to handle if its building from database or generating a new reply
     let commentTemplate;
     //Comments made by current user have different buttons
     if (isCurrentUser(currentNode.user.username)) {
@@ -174,13 +193,14 @@ const buildComment = (currentNode) => {
         commentTemplate = document.getElementById('parent-comment-template');
     }
 
-    const clonedComment = commentTemplate.content.cloneNode(true);
+    let clonedComment = commentTemplate.content.cloneNode(true);
     const commentContainer = clonedComment.querySelector('.parent-comment');
-    clonedComment.querySelector('.comment-content').textContent = currentNode.content;
-    clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
-    clonedComment.querySelector('.username').textContent = currentNode.user.username;
-    clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
-    clonedComment.querySelector('.time-ago').textContent = currentNode.createdAt;
+
+        clonedComment.querySelector('.comment-content').textContent = currentNode.content;
+        clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
+        clonedComment.querySelector('.username').textContent = currentNode.user.username;
+        clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
+        clonedComment.querySelector('.time-ago').textContent = currentNode.createdAt;
 
     //Add Deleted CSS flag to comment if it's deleted
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
@@ -220,6 +240,11 @@ const buildReplyCard = () => {
     const replyCardTemplate = document.getElementById('reply-card-template');
     const clonedCard = replyCardTemplate.content.cloneNode(true);
     clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
+    const submitReply = clonedCard.querySelector('.add-comment__btn');
+    submitReply.addEventListener('click', (evt) => {
+        submitComment(evt.srcElement);
+        console.log("hi");
+    });
     return clonedCard;
 }
 
@@ -253,7 +278,7 @@ const initializeComments = async() => {
     // Seperate json data into userData and commentData
     // TODO split currentUser and comments into separate files and change this logic
     const dataResult = await fetchData2();
-    const userData = dataResult.currentUser;
+    userData = dataResult.currentUser;
     //Will Change this when I have new system (random generated profile pics with slightly diff colors)
     currentUser = dataResult.currentUser;
     sessionStorage.setItem("username", userData.username);
@@ -317,6 +342,7 @@ const addReply = () => {
 //When the state changes, read all the comments and update the Data file
 //Add way to add comment to node tree and Database simultaneously
 
+
 //SPAM DETECTION
 //Upvotes need to have a timeout on backend
 //Limit to number of comments per day
@@ -324,6 +350,7 @@ const addReply = () => {
 
 //Add account creation
 //stores Username, password, choice of profile pic (only 8)
+//PROFILE PIC IDEA: Choose from 1 of 8 images, and assign a random hue to that user (massive amount of variations)
 
 //fetchData();
 
