@@ -18,7 +18,7 @@ const upvoteHandlers = [];
 //clientside collection of how many comments total that there are (for making new comments)
 let totalComments;
 
-class CommentData {
+class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
     constructor(content){
@@ -122,8 +122,9 @@ const editClick = (targetButton) => {
 }
 const submitComment = () => {
     //Check for innuendos
-    //Apply it to the frontEnd
-    //TODO Update the server
+    //Build the HTML element
+
+    //SEND A SERVER UPDATE HERE
 }
 
 
@@ -159,8 +160,8 @@ const moveReplyCard = (targetNode) => {
     // If you use After()you need to get the child to insert after
 }
 
-const buildUserReplyNode = () =>{
-    
+const buildUserReplyNode = (content) =>{
+    return new CommentTemplate(content);
 }
 
 class upvoteHandler {
@@ -173,6 +174,7 @@ class upvoteHandler {
         this.downvoteBtn = this.buttonWidget.querySelector('.vote-btn.minus');
         this.upvoteBtn.addEventListener('click', (e) => this.onclick(e, 1));
         this.downvoteBtn.addEventListener('click', (e) => this.onclick(e, -1));
+        this.id = id;
     }
     onclick(evt, newState){
         //Check that button hasn't already been clicked, reset it or update it
@@ -237,39 +239,29 @@ const buildComment = (currentNode) => {
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
         commentContainer.classList.add('deleted-comment');
         clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
-    }
-    // Add EventListeners to node to buttons
-    upvoteHandlers.push(new upvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
-    // const upvoteBtn = clonedComment.querySelector('.vote-btn.plus');
-    // upvoteBtn.addEventListener('click', (evt) => {
-    //     console.log(evt);
-    //     changeVote(1);
-    // });
-    // const downvoteBtn = clonedComment.querySelector('.vote-btn.minus');
-    // downvoteBtn.addEventListener('click', (evt) => {
-    //     console.log(evt);
-    //     changeVote(-1);
-    // });
-
-
-    if (isCurrentUser(currentNode.user.username) || isAdmin()) {
-        const deleteBtn = clonedComment.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', (evt) => {
-            console.log(evt);
-            openDeleteModal(evt.srcElement);
-        });
-        // Edit button
-        const editBtn = clonedComment.querySelector('.reply-btn');
-        editBtn.addEventListener('click', (evt) => {
-            editClick(evt.srcElement);
-        });
     } else {
-        const replyBtn = clonedComment.querySelector('.reply-btn');
-        replyBtn.addEventListener('click', (evt) => {
-            replyClick(evt.srcElement);
-            
-        });
+        upvoteHandlers.push(new upvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
+        if (isCurrentUser(currentNode.user.username) || isAdmin()) {
+            const deleteBtn = clonedComment.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', (evt) => {
+                console.log(evt);
+                openDeleteModal(evt.srcElement);
+            });
+            // Edit button
+            const editBtn = clonedComment.querySelector('.reply-btn');
+            editBtn.addEventListener('click', (evt) => {
+                editClick(evt.srcElement);
+            });
+        } else {
+            //reply button
+            const replyBtn = clonedComment.querySelector('.reply-btn');
+            replyBtn.addEventListener('click', (evt) => {
+                replyClick(evt.srcElement);
+                
+            });
+        }
     }
+
     return clonedComment;
 }
 
@@ -392,6 +384,8 @@ const addReply = () => {
 //fetchData();
 
  //Possible design pattern
+//Build a tiered object system, where each object holds an ID and all the associated button handlers
+
 //Each reply button onclick finds the closest ancestor using closest()
 //everything is calculated relative to that
 //EG you can insert the reply bar after the comment sibling, you can add the comment
