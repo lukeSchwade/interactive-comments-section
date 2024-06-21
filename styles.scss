@@ -261,6 +261,7 @@ button {
 
     }
 }
+
 //Pertaining to user
 .you-flag {
     background-color: $moderate-blue;
@@ -398,6 +399,11 @@ button:not(.vote-btn):active {
     filter:brightness(60%);
     transition-duration: 50ms;
     top: 2px;
+}
+
+//Active state for vote buttons
+.vote-btn.active{
+        filter: brightness(50%);
 }
 
 .deleted-comment {

@@ -371,6 +371,10 @@ button:not(.vote-btn):active {
   top: 2px;
 }
 
+.vote-btn.active {
+  filter: brightness(50%);
+}
+
 .deleted-comment .comment-content, .deleted-comment .username {
   opacity: 70%;
 }

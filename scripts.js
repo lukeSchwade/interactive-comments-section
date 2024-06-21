@@ -14,12 +14,13 @@ let currentUser = null;
 //global variable for saving text and node when editing comment
 let savedText = '';
 let savedTextArea;
-
+const upvoteHandlers = [];
+//clientside collection of how many comments total that there are (for making new comments)
+let totalComments;
 
 class CommentData {
     //Class for a comment data for purpose of building replies
-    //it mirrors the same format as a comment from the database so it can be fed into buildComment
-
+    //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
     constructor(content){
         this.content = content;
         this.score = 0;
@@ -115,7 +116,7 @@ const editClick = (targetButton) => {
     //Hide the Comment Content and unhide the TypeArea and resubmit button
     savedText = currentComment.querySelector('.comment-content').textContent;
 
-    focusedComment.querySelector('.comment-content')
+    focusedComment.querySelector('.comment-content');
     //TODO: FINISH THIS
 
 }
@@ -123,10 +124,6 @@ const submitComment = () => {
     //Check for innuendos
     //Apply it to the frontEnd
     //TODO Update the server
-}
-
-const changeVote = (input, targetButton) => {
-    //Check if button has already been pressed
 }
 
 
@@ -165,9 +162,59 @@ const moveReplyCard = (targetNode) => {
 const buildUserReplyNode = () =>{
     
 }
+
+class upvoteHandler {
+    //Attached to every upvote widget and manages the votes
+    constructor (buttonWidget, id) {
+        //-1 = downvote 0 = no vote 1 = upvote
+        this.state = 0;
+        this.buttonWidget = buttonWidget;
+        this.upvoteBtn = this.buttonWidget.querySelector('.vote-btn.plus');
+        this.downvoteBtn = this.buttonWidget.querySelector('.vote-btn.minus');
+        this.upvoteBtn.addEventListener('click', (e) => this.onclick(e, 1));
+        this.downvoteBtn.addEventListener('click', (e) => this.onclick(e, -1));
+    }
+    onclick(evt, newState){
+        //Check that button hasn't already been clicked, reset it or update it
+        if (newState == this.state) {
+            this.state = 0;
+            this.updateVisual(newState);
+            //Send a server update HERE
+        } else {
+            this.state = newState;
+            this.updateVisual(newState);
+            //Send a server update HERE
+        }
+    }
+    updateVisual(newState) {
+        //Change which button is highlighted based on what state it is
+        const score = this.buttonWidget.querySelector('.comment-rating');
+        switch (this.state) {
+            case -1:
+                this.downvoteBtn.classList.add("active");
+                this.upvoteBtn.classList.remove("active");
+                score.textContent = parseInt(score.textContent) + newState;
+                break;
+            
+            case 0:
+                this.upvoteBtn.classList.remove("active");
+                this.downvoteBtn.classList.remove("active");
+                score.textContent = parseInt(score.textContent) - newState;
+                break;
+            
+            case 1:
+                this.upvoteBtn.classList.add("active");
+                this.downvoteBtn.classList.remove("active");
+                score.textContent = parseInt(score.textContent) + newState;
+                break;
+
+            default:
+                break;
+        }
+    }
+}
 //Func for building comments from reply
 const buildComment = (currentNode) => {
-    //isReply is a boolean to handle if its building from database or generating a new reply
     let commentTemplate;
     //Comments made by current user have different buttons
     if (isCurrentUser(currentNode.user.username)) {
@@ -184,22 +231,27 @@ const buildComment = (currentNode) => {
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
     clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
     clonedComment.querySelector('.time-ago').textContent = currentNode.createdAt;
+    clonedComment.querySelector('.comment-number').textContent = `#${currentNode.id}`;
 
     //Add Deleted CSS flag to comment if it's deleted
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
         commentContainer.classList.add('deleted-comment');
+        clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
     }
     // Add EventListeners to node to buttons
-    const upvoteBtn = clonedComment.querySelector('.vote-btn.plus');
-    upvoteBtn.addEventListener('click', (evt) => {
-        console.log(evt);
-        changeVote(1);
-    });
-    const downvoteBtn = clonedComment.querySelector('.vote-btn.minus');
-    downvoteBtn.addEventListener('click', (evt) => {
-        console.log(evt);
-        changeVote(-1);
-    });
+    upvoteHandlers.push(new upvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
+    // const upvoteBtn = clonedComment.querySelector('.vote-btn.plus');
+    // upvoteBtn.addEventListener('click', (evt) => {
+    //     console.log(evt);
+    //     changeVote(1);
+    // });
+    // const downvoteBtn = clonedComment.querySelector('.vote-btn.minus');
+    // downvoteBtn.addEventListener('click', (evt) => {
+    //     console.log(evt);
+    //     changeVote(-1);
+    // });
+
+
     if (isCurrentUser(currentNode.user.username) || isAdmin()) {
         const deleteBtn = clonedComment.querySelector('.delete-btn');
         deleteBtn.addEventListener('click', (evt) => {
@@ -250,6 +302,9 @@ class CommentNode {
 
 }
 
+//TODO SPAM HANDLER OBJECT
+//build an object that takes a state change, waits until theres no spam, then sends to server
+//Fetches a batch of comments from server and builds them on the DOM
 const initializeComments = async() => {
     // Fetch the comment Data from server
     const fetchData2 = async () => {
@@ -264,6 +319,7 @@ const initializeComments = async() => {
     // TODO split currentUser and comments into separate files and change this logic
     const dataResult = await fetchData2();
     userData = dataResult.currentUser;
+    totalComments = dataResult.totalComments;
     //Will Change this when I have new system (random generated profile pics with slightly diff colors)
     currentUser = dataResult.currentUser;
     sessionStorage.setItem("username", userData.username);
