@@ -283,7 +283,7 @@ button {
 }
 
 .submit-comment__input {
-  padding: 0.5em 1.5em;
+  padding: 0.5em 1em;
   resize: none;
   width: 100%;
   height: 6em;
