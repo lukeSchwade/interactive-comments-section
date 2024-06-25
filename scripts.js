@@ -137,16 +137,26 @@ const isAdmin = () => {
 
 const openDeleteModal = (currentButton) => {
     document.querySelector('.delete-comment-modal').style.display='block';
-    const CurrentComent = currentButton.closest('.comment');
-    document.querySelector ('.confirm-delete-btn').addEventListener ('click', (currentComment) => {});
+    const currentComment = currentButton.closest('.comment');
+    document.querySelector ('.confirm-delete-btn').addEventListener ('click', (e) => {
+        deleteComment(currentComment);
+    });
     document.querySelector ('delete-comment-modal .cancel-btn');
 }
 
-const deleteComment = () => {
+const deleteComment = (commentContainer) => {
     // Delete the comment, still leaving its place in the tree
     // if it was deleted by admin, write "deleted by admin"
     // Otherwise deleted by user
+    commentContainer.classList.add('deleted-comment');
+    commentContainer.querySelector('.comment-content').textContent = "This Comment has been deleted";
+    commentContainer.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
+    commentContainer.querySelector('.username').textContent = 'Deleted';
+    document.querySelector('.delete-comment-modal').style.display='none';
+
+    comment
     //ADD SERVER UPDATE HERE
+
 }
 
 const moveReplyCard = (targetNode) => {
