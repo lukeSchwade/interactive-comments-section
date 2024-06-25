@@ -15,7 +15,7 @@ let currentUser = null;
 let savedText = '';
 let savedTextArea;
 const upvoteHandlers = [];
-//clientside collection of how many comments total that there are (for making new comments)
+//clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
 
 class CommentTemplate {
@@ -24,7 +24,7 @@ class CommentTemplate {
     constructor(content){
         this.content = content;
         this.score = 0;
-        this.createdAt = 'x days ago'; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
+        this.createdAt = '0 seconds ago'; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
         this.username = sessionStorage.getItem('username');
         //CHANGE WHEN USING NEW USERNAME SYSTEM
         this.user = {
@@ -121,8 +121,6 @@ const editClick = (targetButton) => {
 
 }
 
-
-
 const isCurrentUser = (input) => {
     // Check if a variable is current user
     const currentUser = sessionStorage.getItem('username');
@@ -136,7 +134,7 @@ const isAdmin = () => {
 const openDeleteModal = (currentButton) => {
     document.querySelector('.delete-comment-modal').style.display='block';
     const CurrentComent = currentButton.closest('.comment');
-    document.querySelector ('.confirm-delete-btn').addEventListener ( (currentComment) => {})
+    document.querySelector ('.confirm-delete-btn').addEventListener ( (currentComment) => {});
     document.querySelector ('delete-comment-modal .cancel-btn');
 }
 
@@ -170,9 +168,6 @@ const submitReply = (targetButton) => {
     parentWrapper.insertBefore(newComment, replyWindow);
     //SEND SERVER UPDATE HERE
     replyWindow.remove();
-
-
-    //SEND A SERVER UPDATE HERE
 }
 class upvoteHandler {
     //Attached to every upvote widget and manages the votes
@@ -326,7 +321,7 @@ const initializeComments = async() => {
     currentUser = dataResult.currentUser;
     sessionStorage.setItem("username", userData.username);
     const commentData = dataResult.comments;
-    //Create seperate generalTree obj for each Comment Tree
+    //Create seperate generalTree obj for each comment tree
     const treeArrays = [];
     commentData.forEach( (el, index) => {
         treeArrays.push(new GeneralTree());
@@ -337,7 +332,9 @@ const initializeComments = async() => {
         tree.preOrderTraversalRecursive(commentsContainer);
     }
     moveReplyCard(commentsContainer);
-        
+    //Add Evt listener to top comment reply widget
+    const replyCard = document.getElementById('reply-card');
+    replyCard
     //Bugtest
     //const tree = new GeneralTree();
     // tree.root = commentData[1];
@@ -353,7 +350,7 @@ let userData;
 //Show the comment Section
 //initializeComments();
 
-// Bugtest Stuff
+// Bugtest Stuff BELOW
 const clearComments = () => {
     elements = document.getElementsByClassName('comment-tree-grid-container');
     while (elements.length > 0) {
