@@ -210,10 +210,15 @@ class upvoteHandler {
             this.state = 0;
             this.updateVisual(newState);
             //Send a server update HERE
+        //If the state has to increment by more than 1 (eg +1 to -1)
+        } else if (this.state + newState == 0) {
+            this.state = newState;
+            this.updateVisual(newState*2);
+            //Send a server update HERE
         } else {
             this.state = newState;
             this.updateVisual(newState);
-            //Send a server update HERE
+            //Send a server Update HERE
         }
     }
     updateVisual(newState) {
