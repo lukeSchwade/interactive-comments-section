@@ -375,30 +375,7 @@ const initializeComments = async() => {
 }
 let userData;
 //Show the comment Section
-//initializeComments();
-
-// Bugtest Stuff BELOW
-const clearComments = () => {
-    elements = document.getElementsByClassName('comment-tree-grid-container');
-    while (elements.length > 0) {
-        elements.firstChild.remove();
-    }    
-}
-
-const addReply = () => {
-    //placeholder bugtest Function
-    const commentTemplate = document.getElementById('you-parent-comment-template');
-    //Create cloned fragment of template
-    const clonedNode = commentTemplate.content.cloneNode(true);
-    const templist = document.getElementsByClassName('comment-tree-grid-container');
-    //Append as child to lowest comment
-    const appendHere = templist[templist.length - 1].getElementsByClassName('child-comment-gridblock')[0];
-    const button = clonedNode.querySelector('.comment');
-    button.addEventListener('click', (e) => writeHi(e));
-    appendHere.appendChild(clonedNode);
-    //Move Reply Card to bottom
-    moveReplyCard(currentCommentFocus);
-}
+initializeComments();
 
 //TODO
 
