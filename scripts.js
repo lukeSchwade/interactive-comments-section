@@ -154,7 +154,6 @@ const deleteComment = (commentContainer) => {
     commentContainer.querySelector('.username').textContent = 'Deleted';
     document.querySelector('.delete-comment-modal').style.display='none';
 
-    comment
     //ADD SERVER UPDATE HERE
 
 }
@@ -361,17 +360,6 @@ const initializeComments = async() => {
     //Add Evt listener to top comment reply widget
     const replyCardBtn = document.getElementById('reply-card-submit-btn');
     replyCardBtn.addEventListener('click', (e) => submitComment());
-
-    //Bugtest
-    //const tree = new GeneralTree();
-    // tree.root = commentData[1];
-    // tree.printTreeAsString();
-    // console.log('PRE-ORDER TRAVERSAL:');
-    //For root comments they're appended to the comment container
-    //const TestResult = tree.preOrderTraversalIterative(commentsContainer);
-    //const testResult = tree.preOrderTraversalRecursive(commentsContainer);
-    //moveReplyCard(commentsContainer);
-
 }
 let userData;
 //Show the comment Section
