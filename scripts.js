@@ -22,6 +22,7 @@ class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
     constructor(content){
+        this.id = ++totalComments;
         this.content = content;
         this.score = 0;
         this.createdAt = '0 seconds ago'; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
@@ -31,6 +32,7 @@ class CommentTemplate {
             username: sessionStorage.getItem('username'),
             image: userData.image   
         };
+
 
     }
 
@@ -104,13 +106,15 @@ const replyClick = (targetButton) => {
         replyCard = buildReplyCard();
 
     } else {
-        // This is here bc if it doesn't find it it throws an error and doesnt focus properly
+        // This is here bc if it doesn't find it, it throws an error and doesnt focus properly
         replyCard = document.getElementById('reply-card-inline');
     }
     closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
     replyCard = document.getElementById('reply-card-inline');
     replyCard.querySelector('textarea').focus();
 }
+
+
 
 const editClick = (targetButton) => {
     //Hide the Comment Content and unhide the TypeArea and resubmit button
@@ -134,7 +138,7 @@ const isAdmin = () => {
 const openDeleteModal = (currentButton) => {
     document.querySelector('.delete-comment-modal').style.display='block';
     const CurrentComent = currentButton.closest('.comment');
-    document.querySelector ('.confirm-delete-btn').addEventListener ( (currentComment) => {});
+    document.querySelector ('.confirm-delete-btn').addEventListener ('click', (currentComment) => {});
     document.querySelector ('delete-comment-modal .cancel-btn');
 }
 
@@ -142,7 +146,7 @@ const deleteComment = () => {
     // Delete the comment, still leaving its place in the tree
     // if it was deleted by admin, write "deleted by admin"
     // Otherwise deleted by user
-    //TODO Requires server response
+    //ADD SERVER UPDATE HERE
 }
 
 const moveReplyCard = (targetNode) => {
@@ -158,8 +162,8 @@ const buildUserReplyNode = (content) => {
 }
 const submitReply = (targetButton) => {
     //Check for innuendos
-    //Build the HTML element
-    //Grab the reply window
+    //Check for any conflicts
+
     const replyWindow = targetButton.closest('.inline-reply-container'); 
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
@@ -168,6 +172,16 @@ const submitReply = (targetButton) => {
     parentWrapper.insertBefore(newComment, replyWindow);
     //SEND SERVER UPDATE HERE
     replyWindow.remove();
+}
+
+const submitComment = () => {
+    //Check for innuendos
+    const replyWindow = document.getElementById('reply-card');
+    const newContent = replyWindow.querySelector('.submit-comment__input').value;
+    const newNode = buildUserReplyNode(newContent);
+    const newComment = buildComment(newNode);
+    replyWindow.after(newComment);
+    replyWindow.querySelector('.submit-comment__input').value = '';
 }
 class upvoteHandler {
     //Attached to every upvote widget and manages the votes
@@ -286,6 +300,8 @@ const buildReplyCard = () => {
 //array of comment nodes, which have the associated ID, 
 const CommentsNodesArray = [];
 class CommentNode {
+    //UNUSED CURRENTLY, WILL BE USED LATER
+    //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
     //SERVER BACKEND STUFF
     //Tracks ID and Parent ID with associated HTML element node
     //I feed this back to the database so it can sort through and modify the db when changes are made
@@ -333,8 +349,9 @@ const initializeComments = async() => {
     }
     moveReplyCard(commentsContainer);
     //Add Evt listener to top comment reply widget
-    const replyCard = document.getElementById('reply-card');
-    replyCard
+    const replyCardBtn = document.getElementById('reply-card-submit-btn');
+    replyCardBtn.addEventListener('click', (e) => submitComment());
+
     //Bugtest
     //const tree = new GeneralTree();
     // tree.root = commentData[1];
@@ -385,6 +402,7 @@ const addReply = () => {
 
 
 //Add account creation
+//Check if the user is currently logged in when they try to reply on a comment
 //stores Username, password, choice of profile pic (only 8)
 //PROFILE PIC IDEA: Choose from 1 of 8 images, and assign a random hue to that user (massive amount of variations)
 
