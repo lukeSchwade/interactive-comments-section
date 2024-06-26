@@ -115,7 +115,6 @@ const replyClick = (targetButton) => {
 }
 
 
-
 const editClick = (targetButton) => {
     //Hide the Comment Content and unhide the TypeArea and resubmit button
     savedText = currentComment.querySelector('.comment-content').textContent;
@@ -135,6 +134,8 @@ const isAdmin = () => {
     return false;
 }
 
+
+
 const openDeleteModal = (currentButton) => {
     document.querySelector('.delete-comment-modal').style.display='block';
     const currentComment = currentButton.closest('.comment');
@@ -144,18 +145,27 @@ const openDeleteModal = (currentButton) => {
     document.querySelector ('delete-comment-modal .cancel-btn');
 }
 
-const deleteComment = (commentContainer) => {
-    // Delete the comment, still leaving its place in the tree
-    // if it was deleted by admin, write "deleted by admin"
-    // Otherwise deleted by user
-    commentContainer.classList.add('deleted-comment');
-    commentContainer.querySelector('.comment-content').textContent = "This Comment has been deleted";
-    commentContainer.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
-    commentContainer.querySelector('.username').textContent = 'Deleted';
+const deleteComment = (currentComment) => {
+    //TODO: if it was deleted before sent to server delete it completely, otherwise leave it in tree
+    currentComment.classList.add('deleted-comment');
+    currentComment.querySelector('.comment-content').textContent = "This Comment has been deleted";
+    currentComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
+    currentComment.querySelector('.username').textContent = 'Deleted';
+    cleanupDeletedComment(currentComment);
     document.querySelector('.delete-comment-modal').style.display='none';
 
     //ADD SERVER UPDATE HERE
 
+}
+
+const cleanupDeletedComment = (targetComment) => {
+    //Try Catch's to see if comment needs to be deleted
+    try {
+        targetComment.querySelector('.you-flag').remove();
+    } catch (error) {
+        
+    }
+    targetComment.querySelector
 }
 
 const moveReplyCard = (targetNode) => {
@@ -170,8 +180,8 @@ const buildUserReplyNode = (content) => {
     return new CommentTemplate(content);
 }
 const submitReply = (targetButton) => {
-    //Check for innuendos
-    //Check for any conflicts
+    //TODO: Check for innuendos
+    //TODO: Check for any conflicts
 
     const replyWindow = targetButton.closest('.inline-reply-container'); 
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
@@ -247,6 +257,9 @@ class upvoteHandler {
                 break;
         }
     }
+    defaultUpvote (){
+        //TODO: automatically upvote when you submit a comment
+    }
 }
 //Func for building comments from reply
 const buildComment = (currentNode) => {
@@ -304,8 +317,8 @@ const buildReplyCard = () => {
     clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
     const submitReplyBtn = clonedCard.querySelector('.add-comment__btn');
     submitReplyBtn.addEventListener('click', (evt) => {
-        submitReply(evt.srcElement);
-        console.log("hi");
+        const textArea = evt.srcElement.closest('.inline-reply-container').querySelector('.submit-comment__input');
+        if (textArea.value) submitReply(evt.srcElement);
     });
     return clonedCard;
 }
@@ -364,11 +377,18 @@ const initializeComments = async() => {
     moveReplyCard(commentsContainer);
     //Add Evt listener to top comment reply widget
     const replyCardBtn = document.getElementById('reply-card-submit-btn');
-    replyCardBtn.addEventListener('click', (e) => submitComment());
+    replyCardBtn.addEventListener('click', (e) => {
+        //Only call if TextInput isn't empty
+        const textArea = document.getElementById('add-comment-textarea');
+        if (textArea.value) submitComment();
+
+    });
 }
 let userData;
 //Show the comment Section
 initializeComments();
+
+
 
 //TODO
 
