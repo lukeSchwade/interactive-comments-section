@@ -134,8 +134,6 @@ const isAdmin = () => {
     return false;
 }
 
-
-
 const openDeleteModal = (currentButton) => {
     document.querySelector('.delete-comment-modal').style.display='block';
     const currentComment = currentButton.closest('.comment');
@@ -155,17 +153,23 @@ const deleteComment = (currentComment) => {
     document.querySelector('.delete-comment-modal').style.display='none';
 
     //ADD SERVER UPDATE HERE
-
 }
 
 const cleanupDeletedComment = (targetComment) => {
-    //Try Catch's to see if comment needs to be deleted
-    try {
-        targetComment.querySelector('.you-flag').remove();
-    } catch (error) {
-        
+    //Delete the buttons and disable the upvotes
+    //Clone element to remove all the eventlisteners
+    const newElement = targetComment.cloneNode(true);
+    try { 
+        try {
+            newElement.querySelector('.you-flag').remove();
+        } catch {
+
+        }
+        newElement.querySelector('.reply-btn').remove();
+        newElement.querySelector('.delete-btn').remove();
+    } finally {
+        targetComment.replaceWith(newElement);
     }
-    targetComment.querySelector
 }
 
 const moveReplyCard = (targetNode) => {
@@ -389,7 +393,7 @@ let userData;
 initializeComments();
 
 
-
+//INVALID USERNAMES: 'DELETED'
 //TODO
 
 //When the state changes, read all the comments and update the Data file
