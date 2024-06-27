@@ -416,9 +416,10 @@ class CommentNode {
         this.upvoteHandler = null;
         this.editHandler = null;
         this.replyHandler = null;
+        this.clickHandler = null;
     }
     addReplyNode(node){
-        //Attach a commentNode as a reply (Maybe unneccessary?)
+        //Attach a CommentNode as a reply
     }
     createUpvoteHandler(){
         //Create an Upvote handler and attach it to this node
@@ -438,7 +439,25 @@ class CommentNode {
 }
 
 class ClickHandler {
-    //Possibly unused handler
+    //Handler tied to comment which checks which button was pressed and passes that to respective handler
+    constructor(linkedComment) {
+        this.comment = linkedComment;
+        //attach an eventListener to the comment
+    }
+    removeClickHandler(){
+        //Remove all references to the object so it can be garbage collected (on comment Deletion)
+    }
+    onclick(evtTarget, currentComment){
+        //Check which handler to pass to
+        switch (key) {
+            case value:
+                
+                break;
+        
+            default:
+                break;
+        }
+    }
 }
 
 //TODO
