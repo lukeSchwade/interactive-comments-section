@@ -53,6 +53,22 @@
           },
           "replies": [
             {
+              "id": 4,
+              "parentId": 3,
+              "content": "I couldn't agree more with this. Everything moves so fast and it always seems like everyone knows the newest library/framework. But the fundamentals are what stay constant.",
+              "createdAt": "2 days ago",
+              "score": 2,
+              "replyingTo": "ramsesmiron",
+              "user": {
+                "image": { 
+                  "png": "./images/avatars/image-juliusomo.png",
+                  "webp": "./images/avatars/image-juliusomo.webp"
+                },
+                "username": "juliusomo"
+              },
+              "replies": []
+            },
+            {
               "id": 5,
               "parentId": 3,
               "content": "This comment has been deleted.",
@@ -73,7 +89,7 @@
             {
               "id": 6,
               "parentId": 3,
-              "content": "Test Comment 4",
+              "content": "Cosigned",
               "createdAt": "1 week ago",
               "score": 4,
               "replyingTo": "maxblagun",
@@ -89,22 +105,6 @@
               ]
             }
           ]
-        },
-        {
-          "id": 4,
-          "parentId": 2,
-          "content": "I couldn't agree more with this. Everything moves so fast and it always seems like everyone knows the newest library/framework. But the fundamentals are what stay constant.",
-          "createdAt": "2 days ago",
-          "score": 2,
-          "replyingTo": "ramsesmiron",
-          "user": {
-            "image": { 
-              "png": "./images/avatars/image-juliusomo.png",
-              "webp": "./images/avatars/image-juliusomo.webp"
-            },
-            "username": "juliusomo"
-          },
-          "replies": []
         }
       ]
     }

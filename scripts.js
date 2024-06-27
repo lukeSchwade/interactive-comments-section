@@ -10,7 +10,7 @@
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
 const commentsList = [];
-const editHandlerList = [];
+const editHandlers = [];
 let currentUser = null;
 //global variable for saving text and node when editing comment
 let savedText = '';
@@ -18,6 +18,8 @@ let savedTextArea;
 const upvoteHandlers = [];
 //clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
+
+//IMPORTS GO HERE
 
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
@@ -33,18 +35,13 @@ class CommentTemplate {
             username: sessionStorage.getItem('username'),
             image: userData.image   
         };
-
-
     }
-
 }
-
 class GeneralTree {
     //A single tree of comments with a root parent and children
     constructor(){
         this.root = null;
     }
-
     printTreeAsString() {
         if (!this.root) throw new Error('Tree is empty')
         
@@ -61,8 +58,8 @@ class GeneralTree {
         return console.log(`\n ● node | Username: ${this.root.user.username} - ${this.root.id} ${getTreeString(this.root, 4)}`)
         }
     
-    // iterate over the tree recursively (useful for building comment tree at first)
     preOrderTraversalRecursive(appendHere) {
+        //Iterate over the tree recursively to build the comment tree on DOM
         //appendHere is where the fully-built tree must be appended at the end
         //usually to the comment section container (not if loading more comments, future proof)
 
@@ -96,6 +93,7 @@ class GeneralTree {
         return;
     }
 }
+
 const replyClick = (targetButton) => {
     //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
     const targetComment = targetButton.closest('.comment');
@@ -105,7 +103,6 @@ const replyClick = (targetButton) => {
     //Create a new moving reply card if there isn't one already (the one at top does not move inline)
     if (!document.getElementById('reply-card-inline')) {
         replyCard = buildReplyCard();
-
     } else {
         // This is here bc if it doesn't find it, it throws an error and doesnt focus properly
         replyCard = document.getElementById('reply-card-inline');
@@ -115,32 +112,6 @@ const replyClick = (targetButton) => {
     replyCard.querySelector('textarea').focus();
 }
 
-class EditHandler {
-    //Handler for the Edit Comment box
-    constructor(targetComment, textContent) {
-        this.comment = targetComment;
-        //Corresponding ID of the comment (server)
-        this.id = null;
-        this.isOpen = false;
-        this.content = textContent;
-    }
-    resetVisua() {
-
-    }
-    deleteEditWindow() {
-
-    }
-    onclick() {
-
-    }
-
-    submitEdit(){
-
-        //Create Server update HERE
-    }
-
-
-}
 const editClick = (targetButton) => {
     //Hide the Comment Content and unhide the TypeArea and resubmit button
     const targetComment = targetButton.closest('.comment');
@@ -168,7 +139,6 @@ const handleGlobalClick = (evt, targetComment) => {
     }
 } 
 
-
 const closeEditWindow = (targetComment) => {
     //Reset everything to normal
     try {
@@ -177,7 +147,6 @@ const closeEditWindow = (targetComment) => {
     } catch (error) {
         console.log(error);
     }
-    
 }
 
 const toggleEditVisibility = (targetComment) => {
@@ -234,7 +203,6 @@ const cleanupDeletedComment = (targetComment) => {
         try {
             newElement.querySelector('.you-flag').remove();
         } catch {
-
         }
         newElement.querySelector('.reply-btn').remove();
         newElement.querySelector('.delete-btn').remove();
@@ -251,9 +219,6 @@ const moveReplyCard = (targetNode) => {
     // If you use After()you need to get the child to insert after
 }
 
-const buildUserReplyNode = (content) => {
-    return new CommentTemplate(content);
-}
 const submitReply = (targetButton) => {
     //TODO: Check for innuendos
     //TODO: Check for any conflicts
@@ -266,6 +231,11 @@ const submitReply = (targetButton) => {
     parentWrapper.insertBefore(newComment, replyWindow);
     //SEND SERVER UPDATE HERE
     replyWindow.remove();
+}
+
+const buildUserReplyNode = (content) => {
+    //creates a new template Node that is compatible with the buildComment Function
+    return new CommentTemplate(content);
 }
 
 const submitComment = () => {
@@ -332,9 +302,35 @@ class upvoteHandler {
                 break;
         }
     }
-    defaultUpvote (){
+    selfUpvote (){
         //TODO: automatically upvote when you submit a comment
     }
+}
+
+class EditHandler {
+    //Handler for the Edit Comment box
+    constructor(targetComment, textContent) {
+        this.comment = targetComment;
+        //Corresponding ID of the comment (server)
+        this.id = null;
+        this.isOpen = false;
+        this.content = textContent;
+    }
+    openEditWidget(){
+        //change the comment to a text field with a button
+    }
+    onclickSubmit() {
+        //Check if the edit should be submitted (innuendos, blank, etc)
+    }
+
+    submitEdit(){
+        //Create Handler for Server Update HERE
+    }
+    deleteEditWindow() {
+        //Revert back to normal and delete reference to this handler
+        //if it was a cancel edit throw up the cancel sign
+    }
+
 }
 //Func for building comments from reply
 const buildComment = (currentNode) => {
@@ -345,7 +341,6 @@ const buildComment = (currentNode) => {
     } else {
         commentTemplate = document.getElementById('parent-comment-template');
     }
-
     let clonedComment = commentTemplate.content.cloneNode(true);
     const commentContainer = clonedComment.querySelector('.parent-comment');
 
@@ -389,7 +384,6 @@ const buildComment = (currentNode) => {
             });
         }
     }
-
     return clonedComment;
 }
 
@@ -409,10 +403,9 @@ const buildReplyCard = () => {
 //array of comment nodes, which have the associated ID, 
 const CommentsNodesArray = [];
 class CommentNode {
-    //UNUSED CURRENTLY, WILL BE USED LATER
     //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
     //SERVER BACKEND STUFF
-    //Tracks ID and Parent ID with associated HTML element node
+    //Tracks ID and Parent ID with associated HTML element node, and associated handlers
     //I feed this back to the database so it can sort through and modify the db when changes are made
     constructor (parentId, id, linkedElement) {
         // store the id and parent ID of the comment
@@ -425,21 +418,40 @@ class CommentNode {
         this.replyHandler = null;
     }
     addReplyNode(node){
-
+        //Attach a commentNode as a reply (Maybe unneccessary?)
     }
     createUpvoteHandler(){
-
+        //Create an Upvote handler and attach it to this node
     }
     createReplyHandler(){
-
+        //Create a reply handler and attach it to this node
     }
     createEditHandler(){
-        
+        //Create an edit handler and attach it to this node
+    }
+    createDeleteHandler(){
+        //Create handler for managing deleted comments
+    }
+    createSpamHandler(){
+        //Create a handler that holds on to state changes and sends them to server
     }
 }
 
-//TODO SPAM HANDLER OBJECT
-//build an object that takes a state change, waits until theres no spam, then sends to server
+class ClickHandler {
+    //Possibly unused handler
+}
+
+//TODO
+
+//SPAM HANDLER OBJECT
+//Everytime a request is made, it creates an object holding the request, and updates with new state changes
+//Eg. if you press upvote 20 times, it will not contact the server until you stop pressing upvote for 2s, 
+//then it will send the final state change to the server
+//there will need to be server side spam detection to prevent workarounds (like refreshspamming to get around delay)
+
+//OVERHAUL THE EVENT LISTENER LOGIC
+//Need to create one listener per comment and determine what the click is doing with delegation
+
 //Fetches a batch of comments from server and builds them on the DOM
 const initializeComments = async() => {
     // Fetch the comment Data from server
@@ -454,14 +466,15 @@ const initializeComments = async() => {
     // Seperate json data into userData and commentData
     // TODO split currentUser and comments into separate files and change this logic
     const dataResult = await fetchData2();
+    //Split the recieved data into related fragments
     userData = dataResult.currentUser;
     totalComments = dataResult.totalComments;
-    //Will Change this when I have new system (random generated profile pics with slightly diff colors)
-    currentUser = dataResult.currentUser;
+    currentUser = dataResult.currentUser; //Will Change this when I have new system 
     sessionStorage.setItem("username", userData.username);
     const commentData = dataResult.comments;
     //Create seperate generalTree obj for each comment tree
     const treeArrays = [];
+    //Store each comment tree in treeArrays and 
     commentData.forEach( (el, index) => {
         treeArrays.push(new GeneralTree());
         treeArrays[index].root = commentData[index];
@@ -470,6 +483,7 @@ const initializeComments = async() => {
         tree.printTreeAsString();
         tree.preOrderTraversalRecursive(commentsContainer);
     }
+    //Move the reply card to top if it isn't already
     moveReplyCard(commentsContainer);
     //Add Evt listener to top comment reply widget
     const replyCardBtn = document.getElementById('reply-card-submit-btn');
@@ -501,7 +515,7 @@ initializeComments();
 //Check if the user is currently logged in when they try to reply on a comment
 //stores Username, password, choice of profile pic (only 8)
 //PROFILE PIC IDEA: Choose from 1 of 8 images, and assign a random hue to that user (massive amount of variations)
-
+//(random generated profile pics with slightly diff colors)
 //fetchData();
 
  //Possible design pattern
