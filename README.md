@@ -55,11 +55,12 @@ Users should be able to:
 
 
 ### What I learned
-I learned how to use SASS mixins for media breakpoints, which was tremendously useful
-I learned about `<slot>` and `<template>` for creating comment templates which were useful for creating modular elements, presumably this is handled by JS frameworks though.
-I also learned how incredibly useful grid layouts are for mobile-first.
-I got deep into data structures traversing, and recursion for the purpose of drawing comments, i've learned react's framework of managing seperate states for buttons may be ideal for future projects
-
+- How to use SASS mixins for media breakpoints, which was tremendously useful
+- Using `<slot>` and `<template>` for creating comment templates which were useful for creating modular elements
+- How incredibly useful grid layouts are for mobile-first design where the elements need to shift around for desktop.
+- Introduction to data structures traversing, and recursion for the purpose of drawing comments, I've learned react's framework of managing seperate states for buttons may be ideal for future projects
+- Event delegation; instead of applying an event handler to every button on a comment, which is memory intensive, create an onClick handler that determines the target and delegates downwards
+- Management of objects to deal with every aspect of an element's behavior
 
 
 ```html
