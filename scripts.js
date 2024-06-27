@@ -10,6 +10,7 @@
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
 const commentsList = [];
+const editHandlerList = [];
 let currentUser = null;
 //global variable for saving text and node when editing comment
 let savedText = '';
@@ -114,14 +115,84 @@ const replyClick = (targetButton) => {
     replyCard.querySelector('textarea').focus();
 }
 
+class EditHandler {
+    //Handler for the Edit Comment box
+    constructor(targetComment, textContent) {
+        this.comment = targetComment;
+        //Corresponding ID of the comment (server)
+        this.id = null;
+        this.isOpen = false;
+        this.content = textContent;
+    }
+    resetVisua() {
 
+    }
+    deleteEditWindow() {
+
+    }
+    onclick() {
+
+    }
+
+    submitEdit(){
+
+        //Create Server update HERE
+    }
+
+
+}
 const editClick = (targetButton) => {
     //Hide the Comment Content and unhide the TypeArea and resubmit button
-    savedText = currentComment.querySelector('.comment-content').textContent;
+    const targetComment = targetButton.closest('.comment');
+    //Close previous edit window if it's still open
+    currentCommentFocus = targetComment;
+    const commentContent = targetComment.querySelector('.text-container');
+    const editContent = targetComment.querySelector('.edit-container');
+    savedText = targetComment.querySelector('.comment-content').textContent;
+    editContent.querySelector('.edit-comment-input').value = savedText;
+    toggleEditVisibility(targetComment);
+    targetComment.querySelector('.edit-comment-input').focus();
+    savedText = targetComment.querySelector('.comment-content').textContent;
+    const submitEditBtn = targetComment.querySelector('.edit-btn');
+    //closes edit window when user clicks away
+    document.addEventListener('click', globalListenerWrapper); 
+}
+const globalListenerWrapper = (evt) => {
+    //Need the wrapper to pass multiple args
+    handleGlobalClick(evt, currentCommentFocus);
+}
+const handleGlobalClick = (evt, targetComment) => {
+    if (!targetComment.contains(evt.srcElement)){
+        closeEditWindow(targetComment);
+        document.removeEventListener('click', globalListenerWrapper);
+    }
+} 
 
-    focusedComment.querySelector('.comment-content');
-    //TODO: FINISH THIS
 
+const closeEditWindow = (targetComment) => {
+    //Reset everything to normal
+    try {
+        toggleEditVisibility (targetComment);
+        console.log("cancel edit");
+    } catch (error) {
+        console.log(error);
+    }
+    
+}
+
+const toggleEditVisibility = (targetComment) => {
+    targetComment.querySelector('.delete-btn').classList.toggle('hidden');
+    targetComment.querySelector('.reply-btn').classList.toggle('hidden');
+    const commentContent = targetComment.querySelector('.text-container');
+    const editContent = targetComment.querySelector('.edit-container');
+    commentContent.classList.toggle('hidden');
+    editContent.classList.toggle('hidden');
+}
+const submitEdit = (targetComment) => {
+    const oldComment = targetComment.querySelector('.comment-content');
+    const editedText = targetComment.querySelector('.edit-comment-input').value;
+    oldComment.textContent = editedText;
+    //Server update goes HERE
 }
 
 const isCurrentUser = (input) => {
@@ -302,6 +373,13 @@ const buildComment = (currentNode) => {
             editBtn.addEventListener('click', (evt) => {
                 editClick(evt.srcElement);
             });
+            //Edit submit button
+            const submitEditBtn = clonedComment.querySelector('.edit-btn');
+            submitEditBtn.addEventListener('click', (evt) => {
+                const currentComment = evt.srcElement.closest('.comment');
+                submitEdit(currentComment);
+                closeEditWindow(currentComment);
+            });
         } else {
             //reply button
             const replyBtn = clonedComment.querySelector('.reply-btn');
@@ -336,14 +414,28 @@ class CommentNode {
     //SERVER BACKEND STUFF
     //Tracks ID and Parent ID with associated HTML element node
     //I feed this back to the database so it can sort through and modify the db when changes are made
-    constructor (parentId, id, linkedEl) {
+    constructor (parentId, id, linkedElement) {
         // store the id and parent ID of the comment
-        this.parentId = parentId;
         this.id = id;
-        this.linkedEl = linkedEl;
+        this.parentId = parentId;
+        this.linkedEl = linkedElement;
         this.replies = [];
+        this.upvoteHandler = null;
+        this.editHandler = null;
+        this.replyHandler = null;
     }
+    addReplyNode(node){
 
+    }
+    createUpvoteHandler(){
+
+    }
+    createReplyHandler(){
+
+    }
+    createEditHandler(){
+        
+    }
 }
 
 //TODO SPAM HANDLER OBJECT

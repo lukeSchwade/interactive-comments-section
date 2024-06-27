@@ -317,6 +317,20 @@ button {
     
 }
 
+.edit-comment__btn {
+    @include roundButton($white, $moderate-blue);
+    font-weight: 500;
+        padding: .75em 1.5em;
+        height: fit-content;
+
+        @include media('small'){
+            flex: 0 1 auto;
+        }
+}
+.textarea-container {
+    width: 100%;
+}
+
 .submit-comment__input {
     padding: .5em 1em;
     resize: none;
@@ -374,6 +388,10 @@ button {
         justify-content: space-between;
 
     }
+}
+
+.hidden {
+    display: none !important;
 }
 
 button {

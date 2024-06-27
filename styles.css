@@ -282,6 +282,24 @@ button {
   }
 }
 
+.edit-comment__btn {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(238, 40%, 52%);
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75em 1.5em;
+  height: fit-content;
+}
+@media (min-width: 767px) {
+  .edit-comment__btn {
+    flex: 0 1 auto;
+  }
+}
+
+.textarea-container {
+  width: 100%;
+}
+
 .submit-comment__input {
   padding: 0.5em 1em;
   resize: none;
@@ -343,6 +361,10 @@ button {
   flex-direction: row;
   gap: 1em;
   justify-content: space-between;
+}
+
+.hidden {
+  display: none !important;
 }
 
 button {
