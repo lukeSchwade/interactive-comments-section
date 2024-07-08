@@ -300,6 +300,10 @@ button {
   width: 100%;
 }
 
+.edit-container {
+  gap: 1em;
+}
+
 .submit-comment__input {
   padding: 0.5em 1em;
   resize: none;
