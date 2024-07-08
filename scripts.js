@@ -29,7 +29,7 @@ class CommentTemplate {
         this.id = ++totalComments;
         this.content = content;
         this.score = 0;
-        this.createdAt = '0 seconds ago'; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
+        this.createdAt = new Date();
         this.username = sessionStorage.getItem('username');
         //CHANGE WHEN USING NEW USERNAME and USER IMAGE SYSTEM
         this.user = {
@@ -368,7 +368,9 @@ const buildComment = (currentNode, isSubmitted) => {
     clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
     clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
-    clonedComment.querySelector('.time-ago').textContent = currentNode.createdAt;
+    const timeAgo = clonedComment.querySelector('.time-ago');
+    timeAgo.textContent = convertDateToFromNow(currentNode.createdAt);
+    timeAgo.setAttribute('title', new Date(currentNode.createdAt));
     clonedComment.querySelector('.comment-number').textContent = `#${currentNode.id}`;
 
     //Add Deleted CSS flag to comment if it's deleted
@@ -488,6 +490,37 @@ class ClickHandler {
                 break;
         }
     }
+}
+
+// Proof of concept Time conversion will use plugin later
+const convertDateToFromNow = (date) => {
+    //Convert Time to how long ago from now
+    let returnedDate = '0 seconds ago';
+    const commentDate = new Date(date);
+    const currentDate = new Date();
+    const timeDifference = currentDate.getTime() - commentDate.getTime();
+    returnedDate = msToTime(timeDifference);
+    return returnedDate;
+}
+
+const msToTime = (ms) => {
+    let seconds = Math.floor(ms / 1000);
+    let minutes = Math.floor(ms / (1000 * 60));
+    let hours = Math.floor((ms / (1000 * 60 * 60)));
+    let days = Math.floor((ms / (1000 * 60 * 60 * 24)));
+    let years = Math.floor((ms / (1000 * 60 * 60 * 24 * 365)));
+    let result;
+    if (seconds < 60) result = `${seconds} ${toPlural(seconds, "second")}`;
+    else if (minutes < 60) result = `${minutes} ${toPlural(minutes, "minute")}`;
+    else if (hours < 24) result = `${hours} ${toPlural(hours, "hour")}`;
+    else if (days < 365) result = `${days} ${toPlural(days, "day")}`;
+    else result = `${years} ${toPlural(years, "year")}`
+    return result + " ago";
+}
+
+const toPlural = (qty, word) => {
+    //Add s to word if it's plural
+    return `${word}${qty === 1 ? "" : "s"}`
 }
 
 //TODO
