@@ -40,7 +40,7 @@ Users should be able to:
 ### Links
 
 - Solution URL: [Add solution URL here](https://your-solution-url.com)
-- Live Site URL: [Add live site URL here](https://your-live-site-url.com)
+- [Live Site URL](https://lukeschwade.github.io/interactive-comments-section/)
 
 ## My process
 
@@ -61,7 +61,7 @@ Users should be able to:
 - Introduction to data structures traversing, and recursion for the purpose of drawing comments, I've learned react's framework of managing seperate states for buttons may be ideal for future projects
 - Event delegation; instead of applying an event handler to every button on a comment, which is memory intensive, create an onClick handler that determines the target and delegates downwards
 - Management of objects to deal with every aspect of an element's behavior
-
+- how JS manages timecodes and timezones
 
 ```html
 <h1>Some HTML code I'm proud of</h1>
@@ -71,10 +71,50 @@ Users should be able to:
   color: papayawhip;
 }
 ```
+I liked this solution I came up with for preventing user from upvoting comments twice if it's already been clicked, and a case for managing when you go from +1 to -1 (difference of 2 score instead of 1)
 ```js
-const proudOfThisFunc = () => {
-  console.log('🎉')
-}
+updateUpvoteState(newState){
+        //Change the state based on which button was pressed
+        //Check that button hasn't already been clicked, then update it
+        if (newState == this.state) {
+            this.state = 0;
+            this.updateVisual(newState);
+        //If the state has to increment by more than 1 (eg +1 to -1)
+        } else if (this.state + newState == 0) {
+            this.state = newState;
+            this.updateVisual(newState*2);
+        } else {
+            this.state = newState;
+            this.updateVisual(newState);
+        }
+    }
+
+updateVisual(newState) {
+        //Change which button is highlighted based on what state it is
+        const score = this.buttonWidget.querySelector('.comment-rating');
+        switch (this.state) {
+            case -1:
+                this.downvoteBtn.classList.add("active");
+                this.upvoteBtn.classList.remove("active");
+                score.textContent = parseInt(score.textContent) + newState;
+                break;
+            
+            case 0:
+                this.upvoteBtn.classList.remove("active");
+                this.downvoteBtn.classList.remove("active");
+                score.textContent = parseInt(score.textContent) - newState;
+                break;
+            
+            case 1:
+                this.upvoteBtn.classList.add("active");
+                this.downvoteBtn.classList.remove("active");
+                score.textContent = parseInt(score.textContent) + newState;
+                break;
+
+            default:
+                break;
+        }
+    }
 ```
 
 
