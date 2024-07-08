@@ -9,6 +9,7 @@
 //global variable to keep track of where to append new comments, which comment to delete, etc.
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
+//List of comment Nodes, with associated handlers for each one
 const commentsList = [];
 const editHandlers = [];
 let currentUser = null;
@@ -30,7 +31,7 @@ class CommentTemplate {
         this.score = 0;
         this.createdAt = '0 seconds ago'; //CHANGE TO CURRENT TIME WHEN TIME SYSTEM IMPLEMENTED
         this.username = sessionStorage.getItem('username');
-        //CHANGE WHEN USING NEW USERNAME SYSTEM
+        //CHANGE WHEN USING NEW USERNAME and USER IMAGE SYSTEM
         this.user = {
             username: sessionStorage.getItem('username'),
             image: userData.image   
@@ -69,7 +70,7 @@ class GeneralTree {
             // If the current node is null, exit
             if (!currentNode) return;
 
-            console.log(`build comment ${currentNode.id} here`);
+            console.log(`build comment ${currentNode.id} and Comment Object here`);
             let builtComment = buildComment(currentNode);
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
@@ -227,7 +228,7 @@ const submitReply = (targetButton) => {
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent);
-    const newComment = buildComment(newNode);
+    const newComment = buildComment(newNode, true);
     parentWrapper.insertBefore(newComment, replyWindow);
     //SEND SERVER UPDATE HERE
     replyWindow.remove();
@@ -243,9 +244,10 @@ const submitComment = () => {
     const replyWindow = document.getElementById('reply-card');
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent);
-    const newComment = buildComment(newNode);
+    const newComment = buildComment(newNode, true);
     replyWindow.after(newComment);
     replyWindow.querySelector('.submit-comment__input').value = '';
+    //SEND SERVER UPDATE HERE
 }
 class upvoteHandler {
     //Attached to every upvote widget and manages the votes
@@ -255,11 +257,26 @@ class upvoteHandler {
         this.buttonWidget = buttonWidget;
         this.upvoteBtn = this.buttonWidget.querySelector('.vote-btn.plus');
         this.downvoteBtn = this.buttonWidget.querySelector('.vote-btn.minus');
-        this.upvoteBtn.addEventListener('click', (e) => this.onclick(e, 1));
-        this.downvoteBtn.addEventListener('click', (e) => this.onclick(e, -1));
+        this.buttonWidget.addEventListener('click', (e) => this.onclick(e));
+        //this.upvoteBtn.addEventListener('click', (e) => this.onclick(e, 1));
+        //this.downvoteBtn.addEventListener('click', (e) => this.onclick(e, -1));
         this.id = id;
     }
-    onclick(evt, newState){
+    onclick(evt){
+        //Find closest button
+        //First implementation (will need to refactor to include all buttons, just a proof of concept)
+        //This if statement wrapper catches exceptions
+        if (evt.target.closest('button')) {
+            let target = evt.target.closest('button');
+            if (target.className.includes('plus')) {
+                this.updateState(1);
+            } else if (target.className.includes('minus')) {
+                this.updateState(-1);
+            }
+        }
+    }
+    updateState(newState){
+        //Change the state based on which button was pressed
         //Check that button hasn't already been clicked, reset it or update it
         if (newState == this.state) {
             this.state = 0;
@@ -303,7 +320,10 @@ class upvoteHandler {
         }
     }
     selfUpvote (){
-        //TODO: automatically upvote when you submit a comment
+        //Automatically upvote your own comment when submitted
+        //doesn't call updateState to not mess with serverside (which will default +1 to new comments)
+        this.state = 1;
+        this.updateVisual(1);
     }
 }
 
@@ -333,7 +353,7 @@ class EditHandler {
 
 }
 //Func for building comments from reply
-const buildComment = (currentNode) => {
+const buildComment = (currentNode, isSubmitted) => {
     let commentTemplate;
     //Comments made by current user have different buttons
     if (isCurrentUser(currentNode.user.username)) {
@@ -356,7 +376,10 @@ const buildComment = (currentNode) => {
         commentContainer.classList.add('deleted-comment');
         clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
     } else {
+        //Will need to refactor this
         upvoteHandlers.push(new upvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
+        //Add upvote if submitting comment
+        if (isSubmitted) upvoteHandlers[upvoteHandlers.length-1].selfUpvote();
         if (isCurrentUser(currentNode.user.username) || isAdmin()) {
             const deleteBtn = clonedComment.querySelector('.delete-btn');
             deleteBtn.addEventListener('click', (evt) => {
@@ -407,11 +430,11 @@ class CommentNode {
     //SERVER BACKEND STUFF
     //Tracks ID and Parent ID with associated HTML element node, and associated handlers
     //I feed this back to the database so it can sort through and modify the db when changes are made
-    constructor (parentId, id, linkedElement) {
+    constructor (parentId, id, linkedCommentEl) {
         // store the id and parent ID of the comment
         this.id = id;
         this.parentId = parentId;
-        this.linkedEl = linkedElement;
+        this.linkedEl = linkedCommentEl;
         this.replies = [];
         this.upvoteHandler = null;
         this.editHandler = null;
@@ -420,6 +443,9 @@ class CommentNode {
     }
     addReplyNode(node){
         //Attach a CommentNode as a reply
+    }
+    createClickHandler(){
+        //Handler which delegates to whichever button was pressed
     }
     createUpvoteHandler(){
         //Create an Upvote handler and attach it to this node
@@ -434,9 +460,13 @@ class CommentNode {
         //Create handler for managing deleted comments
     }
     createSpamHandler(){
-        //Create a handler that holds on to state changes and sends them to server
+        //Create a handler that holds on to upvote state changes and sends them to server
+    }
+    initializeNode(){
+        //Create all the handlers
     }
 }
+
 
 class ClickHandler {
     //Handler tied to comment which checks which button was pressed and passes that to respective handler
@@ -528,7 +558,11 @@ initializeComments();
 //SPAM DETECTION
 //Upvotes need to have a timeout on backend
 //Limit to number of comments per day
+//User can edit no more than 3 comments in a second
 
+//Server-side will need to correct the ID of comments on the server-side, since client side will be wrong
+//This might create bugs if the Parent IDs are incorrect client-side I'll think of a way to match
+//(Maybe match Parent's text context just to double check)
 
 //Add account creation
 //Check if the user is currently logged in when they try to reply on a comment
