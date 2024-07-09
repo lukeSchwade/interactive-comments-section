@@ -20,7 +20,7 @@ const upvoteHandlers = [];
 let totalComments;
 
 //IMPORTS GO HERE
-
+let testvar = null;
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -63,14 +63,19 @@ class GeneralTree {
         //appendHere is where the fully-built tree must be appended at the end
         //usually to the comment section container (not if loading more comments, future proof)
 
-        if (!this.root) throw new Error('Tree is empty');   
-        // recursive helper to traverse the tree
+        if (!this.root) throw new Error('Tree is empty');
+        
         function traverse(currentNode, parentNode) {
-            // If the current node is null, exit
+            // recursive helper to traverse the tree
             if (!currentNode) return;
 
             console.log(`build comment ${currentNode.id} and Comment Object here`);
             let builtComment = buildComment(currentNode);
+
+            if (!builtComment.querySelector('.deleted-comment')){
+                //Create an object for managing handlers if comment isn't deleted
+                commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment')));
+            }
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
             // Recursively traverse each of the node's children
@@ -80,7 +85,10 @@ class GeneralTree {
             }
             if (!currentNode.parentId) {
                 console.log("root comment is appended to DOM here");
+                //Add an ID to find and then Delete when used
+               
                 appendHere.appendChild(builtComment);
+
             } else if (currentNode.parentId) {
                 console.log(`Append node ${currentNode.id} to ${currentNode.parentId} here`);
                 return builtComment;
@@ -88,8 +96,11 @@ class GeneralTree {
             return builtComment;
         }
 
-        // Call the helper with the root node to start the traversal
+        
+
+        // Call the traverse helper with the root node to start the traversal
         const finalHTMLnode = traverse(this.root, commentsContainer);
+        //This creates the parallel object tree with associated handlers
         return;
     }
 }
@@ -378,8 +389,9 @@ const buildComment = (currentNode, isSubmitted) => {
     } else {
         //Will need to refactor this
         upvoteHandlers.push(new upvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
-        //Add upvote if submitting comment
+        //Add auto self-upvote when submitting comment
         if (isSubmitted) upvoteHandlers[upvoteHandlers.length-1].selfUpvote();
+
         if (isCurrentUser(currentNode.user.username) || isAdmin()) {
             const deleteBtn = clonedComment.querySelector('.delete-btn');
             deleteBtn.addEventListener('click', (evt) => {
@@ -422,9 +434,7 @@ const buildReplyCard = () => {
     return clonedCard;
 }
 
-
-//array of comment nodes, which have the associated ID, 
-const CommentsNodesArray = [];
+const commentNodeList = [];
 class CommentNode {
     //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
     //SERVER BACKEND STUFF
@@ -435,17 +445,21 @@ class CommentNode {
         this.id = id;
         this.parentId = parentId;
         this.linkedEl = linkedCommentEl;
-        this.replies = [];
-        this.upvoteHandler = null;
-        this.editHandler = null;
-        this.replyHandler = null;
         this.clickHandler = null;
+        this.serverRequestHandler = null;
+        this.initializeNode();
     }
     addReplyNode(node){
         //Attach a CommentNode as a reply
     }
     createClickHandler(){
         //Handler which delegates to whichever button was pressed
+        this.linkedEl
+    }
+    onClick(){
+        if (condition) {
+            
+        }
     }
     createUpvoteHandler(){
         //Create an Upvote handler and attach it to this node
@@ -464,6 +478,9 @@ class CommentNode {
     }
     initializeNode(){
         //Create all the handlers
+    }
+    deleteNode(){
+        
     }
 }
 
@@ -523,6 +540,9 @@ const toPlural = (qty, word) => {
 
 //TODO
 
+//SYSTEM: 
+//Add ID to currently edited comment "focusedComment" when its focuses, and delete it when another comment is being focused
+
 //SPAM HANDLER OBJECT
 //Everytime a request is made, it creates an object holding the request, and updates with new state changes
 //Eg. if you press upvote 20 times, it will not contact the server until you stop pressing upvote for 2s, 
@@ -561,6 +581,7 @@ const initializeComments = async() => {
     })
     for (const tree of treeArrays) {
         tree.printTreeAsString();
+        //Create the HTML tree and simultaneously create the skeleton of Object Handlers
         tree.preOrderTraversalRecursive(commentsContainer);
     }
     //Move the reply card to top if it isn't already
@@ -584,7 +605,9 @@ initializeComments();
 
 //When the state changes, read all the comments and update the Data file
 //Add way to add comment to node tree and Database simultaneously
-
+//builtComment.querySelector('div').setAttribute('id', 'editMe');
+//const currentComment = document.getElementById('editMe');
+//currentComment.removeAttribute('id');
 
 //SPAM DETECTION
 //Upvotes need to have a timeout on backend
