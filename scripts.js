@@ -15,7 +15,6 @@ const editHandlers = [];
 let currentUser = null;
 //global variable for saving text and node when editing comment
 let savedText = '';
-let savedTextArea;
 const upvoteHandlers = [];
 //clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
@@ -130,7 +129,7 @@ const editClick = (targetButton) => {
     document.addEventListener('click', globalListenerWrapper); 
 }
 const globalListenerWrapper = (evt) => {
-    //Need the wrapper to pass multiple args
+    //Need the wrapper to pass multiple args into handleGlobalClick
     handleGlobalClick(evt, currentCommentFocus);
 }
 const handleGlobalClick = (evt, targetComment) => {
@@ -144,7 +143,6 @@ const closeEditWindow = (targetComment) => {
     //Reset everything to normal
     try {
         toggleEditVisibility (targetComment);
-        console.log("cancel edit");
     } catch (error) {
         console.log(error);
     }
@@ -328,7 +326,7 @@ class upvoteHandler {
 }
 
 class EditHandler {
-    //Handler for the Edit Comment box
+    //Handler for the Edit Comment box, currently unused
     constructor(targetComment, textContent) {
         this.comment = targetComment;
         //Corresponding ID of the comment (server)
