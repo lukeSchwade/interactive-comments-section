@@ -74,7 +74,8 @@ class GeneralTree {
 
             if (!builtComment.querySelector('.deleted-comment')){
                 //Create an object for managing handlers if comment isn't deleted
-                commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment')));
+                //COMMENTED OUT UNTIL FUNCTIONAL
+                //commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
             }
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
@@ -258,7 +259,96 @@ const submitComment = () => {
     replyWindow.querySelector('.submit-comment__input').value = '';
     //SEND SERVER UPDATE HERE
 }
-class upvoteHandler {
+
+const commentNodeList = [];
+class CommentNode {
+    //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
+    //SERVER BACKEND STUFF
+    //Tracks ID and Parent ID with associated HTML element node, and associated handlers
+    //I feed this back to the database so it can sort through and modify the db when changes are made
+    constructor (parentId, id, linkedCommentEl, username) {
+        // store the id and parent ID of the comment
+        this.id = id;
+        this.parentId = parentId;
+        this.username = username;
+        this.linkedCommentEl = linkedCommentEl;
+        this.clickHandler = null;
+        this.upvoteHandler = null;
+        this.serverRequestHandler = null;
+        this.clickListener = null;
+        this.init();
+    }
+    onClick(evt){
+        //Determine which button was clicked then determine which handler to pass it to
+        const whichBtn = this.clickHandler.checkClick(evt);
+        switch (whichBtn) {
+            case 'vote':
+                //Send event to upvote Handler
+                break;
+            case 'reply':
+                //send to reply handler
+                break;
+            case 'edit':
+                //send to edit handler
+                break;
+            case 'delete':
+                //Send to delete handler
+                break;
+            default:
+                break;
+        }
+    }
+    createUpvoteHandler(){
+        //Create an Upvote handler and attach it to this node
+    }
+    createReplyHandler(){
+        //Create a reply handler and attach it to this node
+    }
+    createEditHandler(){
+        //Create an edit handler and attach it to this node
+    }
+    createDeleteHandler(){
+        //Create handler for managing deleted comments
+    }
+    createSpamHandler(){
+        //Create a handler that holds on to upvote state changes and sends them to server
+    }
+    init(){
+        //Create all the handlers
+        this.clickHandler = new ClickHandler(this.linkedCommentEl);
+        this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
+        this.clickListener = this.linkedCommentEl.addEventListener('click', this.onClick); 
+    }
+    deleteNode(){
+        //Clear all references and listeners to free up memory when a comment is deleted
+    }
+}
+
+
+class ClickHandler {
+    //Handler tied to comment which checks which button was pressed and passes that to respective handler
+    constructor(usename) {
+        this.username = username;
+    }
+    checkClick(evt){
+        //Returns what kind of button click it was
+        if (evt.target.closest('button')) {
+            const btnClassList = evt.target.closest('button').classList;
+            if (btnClassList.contains("vote-btn")) {
+                return 'vote';
+            
+            } else if (btnClassList.contains("reply-btn")) {
+                if (isCurrentUser(this.username)) { 
+                    return 'edit';
+                } else {return 'reply';} 
+            } else if (btnClassList.contains('delete') && isCurrentUser(this.username)) {
+                return 'delete';
+            }
+        }
+    }
+
+}
+class UpvoteHandler {
     //Attached to every upvote widget and manages the votes
     constructor (buttonWidget, id) {
         //-1 = downvote 0 = no vote 1 = upvote
@@ -275,6 +365,7 @@ class upvoteHandler {
         //Find closest button
         //First implementation (will need to refactor to include all buttons, just a proof of concept)
         //This if statement wrapper catches exceptions
+        //Determine how to update the state
         if (evt.target.closest('button')) {
             let target = evt.target.closest('button');
             if (target.className.includes('plus')) {
@@ -388,7 +479,7 @@ const buildComment = (currentNode, isSubmitted) => {
         clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
     } else {
         //Will need to refactor this
-        upvoteHandlers.push(new upvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
+        upvoteHandlers.push(new UpvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
         //Add auto self-upvote when submitting comment
         if (isSubmitted) upvoteHandlers[upvoteHandlers.length-1].selfUpvote();
 
@@ -434,78 +525,7 @@ const buildReplyCard = () => {
     return clonedCard;
 }
 
-const commentNodeList = [];
-class CommentNode {
-    //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
-    //SERVER BACKEND STUFF
-    //Tracks ID and Parent ID with associated HTML element node, and associated handlers
-    //I feed this back to the database so it can sort through and modify the db when changes are made
-    constructor (parentId, id, linkedCommentEl) {
-        // store the id and parent ID of the comment
-        this.id = id;
-        this.parentId = parentId;
-        this.linkedEl = linkedCommentEl;
-        this.clickHandler = null;
-        this.serverRequestHandler = null;
-        this.initializeNode();
-    }
-    addReplyNode(node){
-        //Attach a CommentNode as a reply
-    }
-    createClickHandler(){
-        //Handler which delegates to whichever button was pressed
-        this.linkedEl
-    }
-    onClick(){
-        if (condition) {
-            
-        }
-    }
-    createUpvoteHandler(){
-        //Create an Upvote handler and attach it to this node
-    }
-    createReplyHandler(){
-        //Create a reply handler and attach it to this node
-    }
-    createEditHandler(){
-        //Create an edit handler and attach it to this node
-    }
-    createDeleteHandler(){
-        //Create handler for managing deleted comments
-    }
-    createSpamHandler(){
-        //Create a handler that holds on to upvote state changes and sends them to server
-    }
-    initializeNode(){
-        //Create all the handlers
-    }
-    deleteNode(){
-        
-    }
-}
 
-
-class ClickHandler {
-    //Handler tied to comment which checks which button was pressed and passes that to respective handler
-    constructor(linkedComment) {
-        this.comment = linkedComment;
-        //attach an eventListener to the comment
-    }
-    removeClickHandler(){
-        //Remove all references to the object so it can be garbage collected (on comment Deletion)
-    }
-    onclick(evtTarget, currentComment){
-        //Check which handler to pass to
-        switch (key) {
-            case value:
-                
-                break;
-        
-            default:
-                break;
-        }
-    }
-}
 
 // Proof of concept Time conversion will use plugin later
 const convertDateToFromNow = (date) => {
@@ -603,6 +623,8 @@ initializeComments();
 //INVALID USERNAMES: 'DELETED'
 //TODO
 
+//Will Need to change the position of pushing the node to handler list 
+//from the tree to the buildComment Function
 //When the state changes, read all the comments and update the Data file
 //Add way to add comment to node tree and Database simultaneously
 //builtComment.querySelector('div').setAttribute('id', 'editMe');
