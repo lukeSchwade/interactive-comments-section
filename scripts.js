@@ -75,7 +75,7 @@ class GeneralTree {
             if (!builtComment.querySelector('.deleted-comment')){
                 //Create an object for managing handlers if comment isn't deleted
                 //COMMENTED OUT UNTIL FUNCTIONAL
-                //commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
+                commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
             }
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
@@ -275,23 +275,28 @@ class CommentNode {
         this.clickHandler = null;
         this.upvoteHandler = null;
         this.serverRequestHandler = null;
-        this.clickListener = null;
         this.init();
+        this.clickListener = this.linkedCommentEl.addEventListener('click', (evt) => this.onClick(evt)); 
+
     }
     onClick(evt){
         //Determine which button was clicked then determine which handler to pass it to
         const whichBtn = this.clickHandler.checkClick(evt);
         switch (whichBtn) {
             case 'vote':
+                this.upvoteHandler.onClick(evt);
                 //Send event to upvote Handler
                 break;
             case 'reply':
+                console.log('reply btn clicked');
                 //send to reply handler
                 break;
             case 'edit':
+                console.log('edit button clicked');
                 //send to edit handler
                 break;
             case 'delete':
+                console.log('delete btn clicked');
                 //Send to delete handler
                 break;
             default:
@@ -315,9 +320,9 @@ class CommentNode {
     }
     init(){
         //Create all the handlers
-        this.clickHandler = new ClickHandler(this.linkedCommentEl);
+        this.clickHandler = new ClickHandler(this.username);
         this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
-        this.clickListener = this.linkedCommentEl.addEventListener('click', this.onClick); 
+        //this.clickListener = 
     }
     deleteNode(){
         //Clear all references and listeners to free up memory when a comment is deleted
@@ -327,7 +332,7 @@ class CommentNode {
 
 class ClickHandler {
     //Handler tied to comment which checks which button was pressed and passes that to respective handler
-    constructor(usename) {
+    constructor(username) {
         this.username = username;
     }
     checkClick(evt){
@@ -341,6 +346,7 @@ class ClickHandler {
                 if (isCurrentUser(this.username)) { 
                     return 'edit';
                 } else {return 'reply';} 
+                //Only fire delete if user is correct (check serverside too)
             } else if (btnClassList.contains('delete') && isCurrentUser(this.username)) {
                 return 'delete';
             }
@@ -356,12 +362,12 @@ class UpvoteHandler {
         this.buttonWidget = buttonWidget;
         this.upvoteBtn = this.buttonWidget.querySelector('.vote-btn.plus');
         this.downvoteBtn = this.buttonWidget.querySelector('.vote-btn.minus');
-        this.buttonWidget.addEventListener('click', (e) => this.onclick(e));
+        //this.buttonWidget.addEventListener('click', (e) => this.onClick(e));
         //this.upvoteBtn.addEventListener('click', (e) => this.onclick(e, 1));
         //this.downvoteBtn.addEventListener('click', (e) => this.onclick(e, -1));
         this.id = id;
     }
-    onclick(evt){
+    onClick(evt){
         //Find closest button
         //First implementation (will need to refactor to include all buttons, just a proof of concept)
         //This if statement wrapper catches exceptions
