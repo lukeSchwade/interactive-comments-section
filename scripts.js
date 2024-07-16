@@ -18,7 +18,6 @@ let savedText = '';
 const upvoteHandlers = [];
 //clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
-
 //IMPORTS GO HERE
 let testvar = null;
 class CommentTemplate {
@@ -75,7 +74,9 @@ class GeneralTree {
             if (!builtComment.querySelector('.deleted-comment')){
                 //Create an object for managing handlers if comment isn't deleted
                 //COMMENTED OUT UNTIL FUNCTIONAL
-                commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
+                // commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
+                new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username);
+                //REPLACE ABOVE WHEN FINISHED
             }
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
@@ -112,13 +113,21 @@ const replyClick = (targetButton) => {
     const closestParentContainer = targetComment.closest('.comment-tree-grid-container');
     const closestChildContainer = closestParentContainer.querySelector('.child-comment-gridblock');
     let replyCard;
-    //Create a new moving reply card if there isn't one already (the one at top does not move inline)
-    if (!document.getElementById('reply-card-inline')) {
-        replyCard = buildReplyCard();
-    } else {
-        // This is here bc if it doesn't find it, it throws an error and doesnt focus properly
+    // Create a new moving reply card if there isn't one already (the one at top does not move inline)
+    if (document.getElementById('reply-card-inline')) {
         replyCard = document.getElementById('reply-card-inline');
+        replyCard.remove();
     }
+    replyCard = buildReplyCard();
+    //Old system that moved reply card, new one always deletes and makes new one (to avoid duplicate eventListeners)
+    // if (!document.getElementById('reply-card-inline')) {
+    //     replyCard = buildReplyCard();
+    // } else {
+    //     // This is here bc if it doesn't find it, it throws an error and doesnt focus properly
+    //     replyCard = document.getElementById('reply-card-inline')
+    // }
+    
+    //Append to proper location
     closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
     replyCard = document.getElementById('reply-card-inline');
     replyCard.querySelector('textarea').focus();
@@ -230,18 +239,20 @@ const moveReplyCard = (targetNode) => {
     // If you use After()you need to get the child to insert after
 }
 
-const submitReply = (targetButton) => {
-    //TODO: Check for innuendos
-    //TODO: Check for any conflicts
-
+const submitReply = (evt) => {
+    const targetButton = evt.target.closest('button');
     const replyWindow = targetButton.closest('.inline-reply-container'); 
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent);
     const newComment = buildComment(newNode, true);
+    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username);
+    console.log('hii')
     parentWrapper.insertBefore(newComment, replyWindow);
+
     //SEND SERVER UPDATE HERE
     replyWindow.remove();
+    //replyHandlerStack = null;
 }
 
 const buildUserReplyNode = (content) => {
@@ -261,33 +272,57 @@ const submitComment = () => {
 }
 
 const commentNodeList = [];
+
+const commentButtonHandler = (evt, username) => {
+    //Determines which button was clicked
+    if (evt.target.closest('button')) {
+        const btnClassList = evt.target.closest('button').classList;
+        if (btnClassList.contains("vote-btn")) {
+            return 'vote';
+        
+        } else if (btnClassList.contains("reply-btn")) {
+            if (isCurrentUser(username)) { 
+                return 'edit';
+            } else {return 'reply';} 
+            //Only fire delete if user is correct (check serverside too)
+        } else if (btnClassList.contains('delete-btn') && isCurrentUser(username)) {
+            return 'delete';
+        }
+    } else {
+        return 'null'
+    }
+}
 class CommentNode {
     //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
     //SERVER BACKEND STUFF
     //Tracks ID and Parent ID with associated HTML element node, and associated handlers
     //I feed this back to the database so it can sort through and modify the db when changes are made
-    constructor (parentId, id, linkedCommentEl, username) {
+    constructor (parentId, id, linkedCommentEl,username) {
         // store the id and parent ID of the comment
         this.id = id;
         this.parentId = parentId;
-        this.username = username;
         this.linkedCommentEl = linkedCommentEl;
-        this.clickHandler = null;
+        this.username = username;
+        //this.clickHandler = null;
         this.upvoteHandler = null;
+        this.replyHandler = null;
         this.serverRequestHandler = null;
         this.init();
         this.clickListener = this.linkedCommentEl.addEventListener('click', (evt) => this.onClick(evt)); 
-
+        // the arrow func is bc arrow funcs do not have their own 'this' but reg functions do in an eventlistener
     }
     onClick(evt){
         //Determine which button was clicked then determine which handler to pass it to
-        const whichBtn = this.clickHandler.checkClick(evt);
+        const whichBtn = commentButtonHandler(evt, this.username);
         switch (whichBtn) {
             case 'vote':
                 this.upvoteHandler.onClick(evt);
                 //Send event to upvote Handler
+                //Create Buffer object for server Update
                 break;
             case 'reply':
+                //this.replyHandler.onClick(this.linkedCommentEl);
+                new ReplyHandler(this.linkedCommentEl, this.id);
                 console.log('reply btn clicked');
                 //send to reply handler
                 break;
@@ -302,6 +337,7 @@ class CommentNode {
             default:
                 break;
         }
+        //If 
     }
     createUpvoteHandler(){
         //Create an Upvote handler and attach it to this node
@@ -315,14 +351,17 @@ class CommentNode {
     createDeleteHandler(){
         //Create handler for managing deleted comments
     }
+    sendServerRequest(data){
+        //Create an object that holds the info, and sends it to server after a delay
+    }
     createSpamHandler(){
         //Create a handler that holds on to upvote state changes and sends them to server
     }
     init(){
         //Create all the handlers
-        this.clickHandler = new ClickHandler(this.username);
+       // this.clickHandler = new ClickHandler(this.username);
         this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
-        //this.clickListener = 
+        //this.replyHandler =  new ReplyHandler(this.linkedCommentEl, this.id);
     }
     deleteNode(){
         //Clear all references and listeners to free up memory when a comment is deleted
@@ -332,6 +371,7 @@ class CommentNode {
 
 class ClickHandler {
     //Handler tied to comment which checks which button was pressed and passes that to respective handler
+    //UNUSED
     constructor(username) {
         this.username = username;
     }
@@ -347,7 +387,7 @@ class ClickHandler {
                     return 'edit';
                 } else {return 'reply';} 
                 //Only fire delete if user is correct (check serverside too)
-            } else if (btnClassList.contains('delete') && isCurrentUser(this.username)) {
+            } else if (btnClassList.contains('delete-btn') && isCurrentUser(this.username)) {
                 return 'delete';
             }
         }
@@ -433,6 +473,57 @@ class UpvoteHandler {
     }
 }
 
+let replyHandler = null;
+class ReplyHandler {
+    constructor(parentComment, parentId) {
+        //The ID of the parent comment that the reply will be appended to
+        this.parentId = parentId;
+        this.id = null;
+        this.replyCard = null;
+        this.submitReplyButton = null;
+        this.init(parentComment);
+        
+        this.submitReplyButton.addEventListener('click', this.onClickReply, {capture: true});
+
+    }
+    set linkedNode(newThis){}
+
+    init(parentComment){
+        createReplyWindow (parentComment);
+        this.replyCard = document.getElementById('reply-card-inline');
+        this.submitReplyButton = this.replyCard.querySelector('.add-comment__btn');
+        //this.submitReplyButton.replaceWith(this.submitReplyButton.cloneNode(true));
+
+
+     }
+    //This bind lets us use 'this' in the context of the object and not the button pressed
+    onClickReply = (evt) => {
+        //TODO: Check for innuendos
+        //TODO: Check for any conflicts
+        console.log("onCLickReplyFires");
+        // if (evt.target.closest('.add-comment__btn')) {
+        //     //If it's the button run Submit
+        //     const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
+        //     if (textArea.value) submitReply(evt);
+        
+        // } else if (!evt.target.closest('.inline-reply-container')) {
+        //     //this.destroy();
+        // }
+        // Else if you click outside the reply box, kill the object
+        const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
+        if (textArea.value) {
+            submitReply(evt);
+            this.destroy();
+        }
+        //Server UPdate here
+    }//).bind(this);
+
+    destroy(){
+        this.submitReplyButton.removeEventListener('click', this.onClick, {capture: true});
+        this.replyCard.remove();
+
+    }
+}
 class EditHandler {
     //Handler for the Edit Comment box, currently unused
     constructor(targetComment, textContent) {
@@ -458,6 +549,15 @@ class EditHandler {
     }
 
 }
+
+const addSelfDestructingEventListener = (element, eventType, callback) => {
+    //Add an EventListener that deletes itself when it's called
+    let handler = () => {
+        callback();
+        element.removeEventListener(eventType, handler);
+    };
+    element.addEventListener(eventType, handler);
+};
 //Func for building comments from reply
 const buildComment = (currentNode, isSubmitted) => {
     let commentTemplate;
@@ -485,38 +585,63 @@ const buildComment = (currentNode, isSubmitted) => {
         clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
     } else {
         //Will need to refactor this
-        upvoteHandlers.push(new UpvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
-        //Add auto self-upvote when submitting comment
-        if (isSubmitted) upvoteHandlers[upvoteHandlers.length-1].selfUpvote();
+        //upvoteHandlers.push(new UpvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
+        //Add auto self-upvote when submitting comment IMPORTANT BRING BACK
+        //if (isSubmitted) upvoteHandlers[upvoteHandlers.length-1].selfUpvote();
 
-        if (isCurrentUser(currentNode.user.username) || isAdmin()) {
-            const deleteBtn = clonedComment.querySelector('.delete-btn');
-            deleteBtn.addEventListener('click', (evt) => {
-                console.log(evt);
-                openDeleteModal(evt.srcElement);
-            });
-            // Edit button
-            const editBtn = clonedComment.querySelector('.reply-btn');
-            editBtn.addEventListener('click', (evt) => {
-                editClick(evt.srcElement);
-            });
-            //Edit submit button
-            const submitEditBtn = clonedComment.querySelector('.edit-btn');
-            submitEditBtn.addEventListener('click', (evt) => {
-                const currentComment = evt.srcElement.closest('.comment');
-                submitEdit(currentComment);
-                closeEditWindow(currentComment);
-            });
-        } else {
-            //reply button
-            const replyBtn = clonedComment.querySelector('.reply-btn');
-            replyBtn.addEventListener('click', (evt) => {
-                replyClick(evt.srcElement);
+        //Attach Eventlisteners to the seperate  buttons (deprecated)
+        // if (isCurrentUser(currentNode.user.username) || isAdmin()) {
+        //     const deleteBtn = clonedComment.querySelector('.delete-btn');
+        //     deleteBtn.addEventListener('click', (evt) => {
+        //         console.log(evt);
+        //         openDeleteModal(evt.srcElement);
+        //     });
+        //     // Edit button
+        //     const editBtn = clonedComment.querySelector('.reply-btn');
+        //     editBtn.addEventListener('click', (evt) => {
+        //         editClick(evt.srcElement);
+        //     });
+        //     //Edit submit button
+        //     const submitEditBtn = clonedComment.querySelector('.edit-btn');
+        //     submitEditBtn.addEventListener('click', (evt) => {
+        //         const currentComment = evt.srcElement.closest('.comment');
+        //         submitEdit(currentComment);
+        //         closeEditWindow(currentComment);
+        //     });
+        // } else {
+        //     //reply button
+        //     const replyBtn = clonedComment.querySelector('.reply-btn');
+        //     replyBtn.addEventListener('click', (evt) => {
+        //         replyClick(evt.srcElement);
                 
-            });
-        }
+        //     });
+        // }
     }
     return clonedComment;
+}
+
+class ServerPayload {
+    constructor(data, id, parentID) {
+        //The object that gets sent to the server 
+    }
+}
+const createReplyWindow = (parentComment) => {
+    //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
+    //const targetComment = targetButton.closest('.comment');
+    const closestParentContainer = parentComment.closest('.comment-tree-grid-container');
+    const closestChildContainer = closestParentContainer.querySelector('.child-comment-gridblock');
+    let replyCard;
+    //Create a new moving reply card if there isn't one already (the one at top does not move inline)
+    if (!document.getElementById('reply-card-inline')) {
+        replyCard = buildReplyCard();
+    } else {
+        // This is here bc if it doesn't find it, it throws an error and doesnt focus properly
+        replyCard = document.getElementById('reply-card-inline');
+        replyCard.querySelector('textarea').value = ''; 
+    }//Append to proper location
+    closestChildContainer.insertBefore(replyCard, closestChildContainer.firstChild);
+    replyCard = document.getElementById('reply-card-inline');
+    replyCard.querySelector('textarea').focus();
 }
 
 const buildReplyCard = () => {
@@ -524,14 +649,13 @@ const buildReplyCard = () => {
     const clonedCard = replyCardTemplate.content.cloneNode(true);
     clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
     const submitReplyBtn = clonedCard.querySelector('.add-comment__btn');
-    submitReplyBtn.addEventListener('click', (evt) => {
-        const textArea = evt.srcElement.closest('.inline-reply-container').querySelector('.submit-comment__input');
-        if (textArea.value) submitReply(evt.srcElement);
-    });
     return clonedCard;
 }
 
 
+const waitForUserInput = async () => {
+
+}
 
 // Proof of concept Time conversion will use plugin later
 const convertDateToFromNow = (date) => {
