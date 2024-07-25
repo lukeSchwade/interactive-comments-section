@@ -62,6 +62,7 @@ Users should be able to:
 - Event delegation; instead of applying an event handler to every button on a comment, which is memory intensive, create an onClick handler that determines the target and delegates downwards
 - Management of objects to deal with every aspect of an element's behavior
 - how JS manages timecodes and timezones
+- Subclass and superclass inheritances, and how this design pattern can be useful when you are making objects that have some shared properties and methods
 
 ```html
 <h1>Some HTML code I'm proud of</h1>
