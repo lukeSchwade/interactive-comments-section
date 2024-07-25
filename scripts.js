@@ -322,7 +322,10 @@ class CommentNode {
                 break;
             case 'reply':
                 //this.replyHandler.onClick(this.linkedCommentEl);
-                new ReplyHandler(this.linkedCommentEl, this.id);
+                //If hasnt been created, create a new one
+                //if (!this.replyHandler) this.replyHandler = new ReplyHandler(this.linkedCommentEl, this.id);
+                repositionReplyCard()
+                //Otherwise just send it info
                 console.log('reply btn clicked');
                 //send to reply handler
                 break;
@@ -473,34 +476,39 @@ class UpvoteHandler {
     }
 }
 
-let replyHandler = null;
+//The Single Reply Handler
+let replyHandler = new ReplyHandler();
 class ReplyHandler {
     constructor(parentComment, parentId) {
         //The ID of the parent comment that the reply will be appended to
-        this.parentId = parentId;
+        this.parentId = null;
+        //The ID of the potential new Comment
         this.id = null;
         this.replyCard = null;
         this.submitReplyButton = null;
         this.init(parentComment);
-        
         this.submitReplyButton.addEventListener('click', this.onClickReply, {capture: true});
 
     }
-    set linkedNode(newThis){}
 
     init(parentComment){
-        createReplyWindow (parentComment);
+        this.repositionReplyCard(parentComment);
         this.replyCard = document.getElementById('reply-card-inline');
         this.submitReplyButton = this.replyCard.querySelector('.add-comment__btn');
         //this.submitReplyButton.replaceWith(this.submitReplyButton.cloneNode(true));
 
 
      }
-    //This bind lets us use 'this' in the context of the object and not the button pressed
+    repositionReplyCard(parentComment) {
+        //Seperated so it can be run seperately if object is already initialized
+        createReplyWindow (parentComment);
+
+    }
     onClickReply = (evt) => {
         //TODO: Check for innuendos
         //TODO: Check for any conflicts
         console.log("onCLickReplyFires");
+        console.log(`Comment to be attached to: ${this.parentId}, comment ID: ${this.id}`)
         // if (evt.target.closest('.add-comment__btn')) {
         //     //If it's the button run Submit
         //     const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
@@ -516,12 +524,17 @@ class ReplyHandler {
             this.destroy();
         }
         //Server UPdate here
-    }//).bind(this);
-
+        //payload: Parent comment ID, current user ID, current comment ID (resolve serverside), content of comment
+    }
     destroy(){
         this.submitReplyButton.removeEventListener('click', this.onClick, {capture: true});
         this.replyCard.remove();
 
+    }
+    UpdateParentComment(parentId, ){
+        this.parentId = 
+        //Possible other design pattern
+        //A single Reply Handler that updates it's position and the object it's linked to onClick
     }
 }
 class EditHandler {
