@@ -240,19 +240,18 @@ const moveReplyCard = (targetNode) => {
 }
 
 const submitReply = (evt) => {
+    //Still used
     const targetButton = evt.target.closest('button');
     const replyWindow = targetButton.closest('.inline-reply-container'); 
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent);
     const newComment = buildComment(newNode, true);
-    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username);
-    console.log('hii')
+    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true);
     parentWrapper.insertBefore(newComment, replyWindow);
 
     //SEND SERVER UPDATE HERE
     replyWindow.remove();
-    //replyHandlerStack = null;
 }
 
 const buildUserReplyNode = (content) => {
@@ -297,7 +296,7 @@ class CommentNode {
     //SERVER BACKEND STUFF
     //Tracks ID and Parent ID with associated HTML element node, and associated handlers
     //I feed this back to the database so it can sort through and modify the db when changes are made
-    constructor (parentId, id, linkedCommentEl,username) {
+    constructor (parentId, id, linkedCommentEl,username, isSubmitted) {
         // store the id and parent ID of the comment
         this.id = id;
         this.parentId = parentId;
@@ -307,9 +306,15 @@ class CommentNode {
         this.upvoteHandler = null;
         this.replyHandler = null;
         this.serverRequestHandler = null;
-        this.init();
+        this.init(isSubmitted);
         this.clickListener = this.linkedCommentEl.addEventListener('click', (evt) => this.onClick(evt)); 
         // the arrow func is bc arrow funcs do not have their own 'this' but reg functions do in an eventlistener
+    }
+    init(isSubmitted){
+        //Create all the handlers
+        this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
+        if (isSubmitted) this.upvoteHandler.selfUpvote();
+        //this.replyHandler =  new ReplyHandler(this.linkedCommentEl, this.id);
     }
     onClick(evt){
         //Determine which button was clicked then determine which handler to pass it to
@@ -324,8 +329,15 @@ class CommentNode {
                 //this.replyHandler.onClick(this.linkedCommentEl);
                 //If hasnt been created, create a new one
                 //if (!this.replyHandler) this.replyHandler = new ReplyHandler(this.linkedCommentEl, this.id);
-                repositionReplyCard()
-                //Otherwise just send it info
+
+                //If there isn't already a replyhandler, initialize it
+                if (!replyHandler) {
+                    replyHandler = new ReplyHandler(this.id, this.linkedCommentEl);
+                } else {
+                    //Otherwise update it with new object info
+                    replyHandler.updateParentObjectData(this.id, this.linkedCommentEl);
+                }
+                replyHandler.repositionReplyCard(this.linkedCommentEl);
                 console.log('reply btn clicked');
                 //send to reply handler
                 break;
@@ -360,12 +372,7 @@ class CommentNode {
     createSpamHandler(){
         //Create a handler that holds on to upvote state changes and sends them to server
     }
-    init(){
-        //Create all the handlers
-       // this.clickHandler = new ClickHandler(this.username);
-        this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
-        //this.replyHandler =  new ReplyHandler(this.linkedCommentEl, this.id);
-    }
+
     deleteNode(){
         //Clear all references and listeners to free up memory when a comment is deleted
     }
@@ -477,65 +484,62 @@ class UpvoteHandler {
 }
 
 //The Single Reply Handler
-let replyHandler = new ReplyHandler();
+let replyHandler;
 class ReplyHandler {
-    constructor(parentComment, parentId) {
+    //Single reply handler object that is loosely attached to the corresponding parent comment via parentID and linked element
+    constructor(parentId, parentComment) {
         //The ID of the parent comment that the reply will be appended to
-        this.parentId = null;
+        this.parentId = parentId;
         //The ID of the potential new Comment
         this.id = null;
         this.replyCard = null;
         this.submitReplyButton = null;
         this.init(parentComment);
-        this.submitReplyButton.addEventListener('click', this.onClickReply, {capture: true});
 
     }
 
     init(parentComment){
         this.repositionReplyCard(parentComment);
-        this.replyCard = document.getElementById('reply-card-inline');
-        this.submitReplyButton = this.replyCard.querySelector('.add-comment__btn');
-        //this.submitReplyButton.replaceWith(this.submitReplyButton.cloneNode(true));
-
-
      }
     repositionReplyCard(parentComment) {
         //Seperated so it can be run seperately if object is already initialized
         createReplyWindow (parentComment);
+        this.replyCard = document.getElementById('reply-card-inline');
+        this.submitReplyButton = this.replyCard.querySelector('.add-comment__btn');
+        this.detachListener();
+        this.attachListener();
+    }
+    attachListener(){
+        this.submitReplyButton.addEventListener('click', this.onClickReply, {capture: true});
 
+    }
+    detachListener(){
+        this.submitReplyButton.removeEventListener('click', this.onClickReply, {capture: true});
+
+    }
+    updateParentObjectData(parentId, parentComment){
+        this.parentId = parentId;
+        this.replyCard = parentComment;
     }
     onClickReply = (evt) => {
         //TODO: Check for innuendos
         //TODO: Check for any conflicts
-        console.log("onCLickReplyFires");
-        console.log(`Comment to be attached to: ${this.parentId}, comment ID: ${this.id}`)
-        // if (evt.target.closest('.add-comment__btn')) {
-        //     //If it's the button run Submit
-        //     const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
-        //     if (textArea.value) submitReply(evt);
-        
-        // } else if (!evt.target.closest('.inline-reply-container')) {
-        //     //this.destroy();
-        // }
-        // Else if you click outside the reply box, kill the object
         const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
-        if (textArea.value) {
+        console.log("onCLickReplyFires");
+
+        //Check for blanks, innuendos, etc
+        if (textArea.value) {            
+            //Build the HTML node of Comment
             submitReply(evt);
-            this.destroy();
+            //Update the ID before sending server request
+            this.id = totalComments;
+            console.log(`Server payload: Parent comment ID: ${this.parentId}, new comment ID: ${this.id}, content`);
+            //Create a server payload object
         }
         //Server UPdate here
         //payload: Parent comment ID, current user ID, current comment ID (resolve serverside), content of comment
     }
-    destroy(){
-        this.submitReplyButton.removeEventListener('click', this.onClick, {capture: true});
-        this.replyCard.remove();
 
-    }
-    UpdateParentComment(parentId, ){
-        this.parentId = 
-        //Possible other design pattern
-        //A single Reply Handler that updates it's position and the object it's linked to onClick
-    }
 }
 class EditHandler {
     //Handler for the Edit Comment box, currently unused
@@ -565,6 +569,7 @@ class EditHandler {
 
 const addSelfDestructingEventListener = (element, eventType, callback) => {
     //Add an EventListener that deletes itself when it's called
+    //UNUSED
     let handler = () => {
         callback();
         element.removeEventListener(eventType, handler);
@@ -572,7 +577,7 @@ const addSelfDestructingEventListener = (element, eventType, callback) => {
     element.addEventListener(eventType, handler);
 };
 //Func for building comments from reply
-const buildComment = (currentNode, isSubmitted) => {
+const buildComment = (currentNode) => {
     let commentTemplate;
     //Comments made by current user have different buttons
     if (isCurrentUser(currentNode.user.username)) {
@@ -634,8 +639,72 @@ const buildComment = (currentNode, isSubmitted) => {
 }
 
 class ServerPayload {
-    constructor(data, id, parentID) {
-        //The object that gets sent to the server 
+    constructor(commentId) {
+        //Types of server submissions: editComment, addComment, deleteComment, changeVote
+        this.typeOfPayload = null;
+        this.id = commentId;
+    }
+    messageServer(){
+        console.log (Object.getOwnPropertyNames(this));
+        //Send the Server the contents of the payload
+    }
+    markForCleanup(){
+        //Method that wipes out the object when a server response is made
+
+    }
+}
+
+class AddCommentPayload extends ServerPayload {
+    constructor(id, parentId, userId, content){
+        //Contents: id, parent ID, userSubmitter, and content
+        super(id);
+        this.parentId = parentId;
+        this.userId = userId;
+        this.content = content;
+        this.payloadType = "addComment";
+        this.messageServer();
+    }
+}
+class deleteCommentPayload extends ServerPayload {
+    constructor (id, userId){
+        //Contents: id, userID
+        super (id);
+        this.userId = userId;
+        this.payloadType = "deleteComment";
+        this.messageServer();
+    }
+}
+
+class EditPayload extends ServerPayload {
+    constructor (id, userId, content){
+        //contents: id, userID, and modified content
+        super(id);
+        this.userId = userId;
+        this.content = content;
+        this.payloadType = "editComment";
+        this.messageServer();
+    }
+}
+class UpvotePayload extends ServerPayload {
+    constructor(id, userId, initialStateChange){
+        //contents: id, userID of voter, and stateChange
+        super(id);
+        this.userId = userId;
+        //Should only be -1, 0 or +1
+        this.stateChange = initialStateChange;
+        initializeTimer();
+    }
+    initializeTimer(){
+        //anti-spam timer that waits 2 seconds after the last state change (refreshing state resets the timer) before sending server request
+
+
+    }
+    updateState(newState){
+        //Update the statechange
+        this.stateChange = newState;
+    }
+    resetTimer(){
+
     }
 }
 const createReplyWindow = (parentComment) => {
@@ -686,12 +755,14 @@ const msToTime = (ms) => {
     let minutes = Math.floor(ms / (1000 * 60));
     let hours = Math.floor((ms / (1000 * 60 * 60)));
     let days = Math.floor((ms / (1000 * 60 * 60 * 24)));
+    let months = Math.floor((ms / (1000 * 60 * 60 * 24 * 30)))
     let years = Math.floor((ms / (1000 * 60 * 60 * 24 * 365)));
     let result;
     if (seconds < 60) result = `${seconds} ${toPlural(seconds, "second")}`;
     else if (minutes < 60) result = `${minutes} ${toPlural(minutes, "minute")}`;
     else if (hours < 24) result = `${hours} ${toPlural(hours, "hour")}`;
-    else if (days < 365) result = `${days} ${toPlural(days, "day")}`;
+    else if (days < 30) result = `${days} ${toPlural(days, "day")}`;
+    else if (months < 12) result = `${months} ${toPlural(months, "month")}`;
     else result = `${years} ${toPlural(years, "year")}`
     return result + " ago";
 }
