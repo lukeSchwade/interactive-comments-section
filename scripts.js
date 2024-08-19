@@ -133,34 +133,6 @@ const replyClick = (targetButton) => {
     replyCard.querySelector('textarea').focus();
 }
 
-const editClick = (targetButton) => {
-    //Curently Unused
-    //Hide the Comment Content and unhide the TypeArea and resubmit button
-    const targetComment = targetButton.closest('.comment');
-    //Close previous edit window if it's still open
-    currentCommentFocus = targetComment;
-    const commentContent = targetComment.querySelector('.text-container');
-    const editContent = targetComment.querySelector('.edit-container');
-    savedText = targetComment.querySelector('.comment-content').textContent;
-    editContent.querySelector('.edit-comment-input').value = savedText;
-    toggleEditVisibility(targetComment);
-    targetComment.querySelector('.edit-comment-input').focus();
-    savedText = targetComment.querySelector('.comment-content').textContent;
-    const submitEditBtn = targetComment.querySelector('.edit-btn');
-    //closes edit window when user clicks away
-    document.addEventListener('click', globalListenerWrapper); 
-}
-const globalListenerWrapper = (evt) => {
-    //Need the wrapper to pass multiple args into handleGlobalClick
-    handleGlobalClick(evt, currentCommentFocus);
-}
-const handleGlobalClick = (evt, targetComment) => {
-    if (!targetComment.contains(evt.srcElement)){
-        closeEditWindow(targetComment);
-        document.removeEventListener('click', globalListenerWrapper);
-    }
-} 
-
 const closeEditWindow = (targetComment) => {
     //Reset everything to normal
     try {
@@ -238,7 +210,6 @@ const moveReplyCard = (targetNode) => {
 }
 
 const submitReply = (evt) => {
-    //Still used
     const targetButton = evt.target.closest('button');
     const replyWindow = targetButton.closest('.inline-reply-container'); 
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
@@ -396,31 +367,7 @@ class CommentNode {
 }
 
 
-class ClickHandler {
-    //Handler tied to comment which checks which button was pressed and passes that to respective handler
-    //UNUSED
-    constructor(username) {
-        this.username = username;
-    }
-    checkClick(evt){
-        //Returns what kind of button click it was
-        if (evt.target.closest('button')) {
-            const btnClassList = evt.target.closest('button').classList;
-            if (btnClassList.contains("vote-btn")) {
-                return 'vote';
-            
-            } else if (btnClassList.contains("reply-btn")) {
-                if (isCurrentUser(this.username)) { 
-                    return 'edit';
-                } else {return 'reply';} 
-                //Only fire delete if user is correct (check serverside too)
-            } else if (btnClassList.contains('delete-btn') && isCurrentUser(this.username)) {
-                return 'delete';
-            }
-        }
-    }
 
-}
 class UpvoteHandler {
     //Attached to every upvote widget and manages the votes
     constructor (buttonWidget, id) {
@@ -648,16 +595,13 @@ class DeleteHandler {
         if (!this.isOpen){
             document.querySelector('.delete-comment-modal').style.display='block';
             this.isOpen = true;
-
         }
-        
     }
     hideModal(){
         if (this.isOpen){
             this.cleanUp();
             this.isOpen = false;
         }
-        
     }
     cleanUp(){
         //clear data after modal is hidden to prevent unintended deletions
@@ -666,8 +610,6 @@ class DeleteHandler {
         document.querySelector('.delete-comment-modal').style.display='none';
     }
 
-
-    //Cancel
 }
 
 const addSelfDestructingEventListener = (element, eventType, callback) => {
@@ -704,6 +646,7 @@ const buildComment = (currentNode) => {
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
         commentContainer.classList.add('deleted-comment');
         clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
+        clonedComment.querySelector('.reply-btn').remove();
     } else {
         //Will need to refactor this
         //upvoteHandlers.push(new UpvoteHandler(clonedComment.querySelector('.vote-container'), currentNode.id));
