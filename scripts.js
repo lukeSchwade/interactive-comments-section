@@ -169,11 +169,29 @@ const closeEditWindow = (targetComment) => {
     }
 }
 
-const toggleEditVisibility = (targetComment) => {
+const toggleEditVisibility = (targetComment, visible) => {
     targetComment.querySelector('.delete-btn').classList.toggle('hidden');
     targetComment.querySelector('.reply-btn').classList.toggle('hidden');
     const commentContent = targetComment.querySelector('.text-container');
     const editContent = targetComment.querySelector('.edit-container');
+    commentContent.classList.toggle('hidden');
+    editContent.classList.toggle('hidden');
+}
+
+const swapEditVisibility = (targetComment, visible) => {
+    const deleteBtn = targetComment.querySelector('.delete-btn')
+    const replyBtn = targetComment.querySelector('.reply-btn')
+    const commentContent = targetComment.querySelector('.text-container');
+    const editContent = targetComment.querySelector('.edit-container');
+    if (!visible) {
+        //false means edit card is hidden, true is visible
+        deleteBtn.classList.add('hidden');
+        replyBtn.classList.add('hidden');
+        commentContent.classList.remove('hidden');
+        editContent.classList.remove('hidden')
+    } else {
+        deleteBtn.classList.remove('hidden');
+    }
     commentContent.classList.toggle('hidden');
     editContent.classList.toggle('hidden');
 }
@@ -274,6 +292,9 @@ const commentNodeList = [];
 
 const commentButtonHandler = (evt, username) => {
     //Determines which button was clicked
+    //Global Click for closing edit window
+    if (editHandler && editHandler.isOpen && !editHandler.targetComment.contains(evt.srcElement)) editHandler.closeEditWindow(); 
+
     if (evt.target.closest('button')) {
         const btnClassList = evt.target.closest('button').classList;
         if (btnClassList.contains("vote-btn")) {
@@ -286,7 +307,10 @@ const commentButtonHandler = (evt, username) => {
             //Only fire delete if user is correct (check serverside too)
         } else if (btnClassList.contains('delete-btn') && isCurrentUser(username)) {
             return 'delete';
+        } else if (btnClassList.contains('edit-btn') && isCurrentUser(username)){
+            return 'submitEdit';
         }
+
     } else {
         return 'null'
     }
@@ -343,7 +367,18 @@ class CommentNode {
                 break;
             case 'edit':
                 console.log('edit button clicked');
-                //send to edit handler
+                //Create handler if it doesn't exist otherwise update it.
+                if (!editHandler) {
+                    editHandler = new EditHandler(this.id, this.linkedCommentEl);
+                } else {
+                    //Otherwise update it with new object info
+                    editHandler.updateObjectData(this.id, this.linkedCommentEl);
+                    editHandler.openEditWindow();
+                }
+                break;
+            case 'submitEdit': 
+            console.log("submit edit button clicked");
+            editHandler.onclickSubmit()
                 break;
             case 'delete':
                 console.log('delete btn clicked');
@@ -541,31 +576,65 @@ class ReplyHandler {
     }
 
 }
+//Single Edit handler that is loosely attached to corresponding comment
+let editHandler;
 class EditHandler {
-    //Handler for the Edit Comment box, currently unused
-    constructor(targetComment, textContent) {
-        this.comment = targetComment;
-        //Corresponding ID of the comment (server)
-        this.id = null;
+    constructor(commentId, targetComment) {
+        this.targetComment = targetComment;
+        this.id = commentId;
         this.isOpen = false;
-        this.content = textContent;
+        this.content = null;
+        this.init();
+
     }
-    openEditWidget(){
-        //change the comment to a text field with a button
+    init(){
+        this.openEditWindow();
     }
+    updateObjectData(newId, newComment){
+        //Only one edit window allowed
+        this.closeEditWindow();
+        //Update the comment ID to proper one
+        this.id = newId;
+        this.targetComment = newComment;
+        
+    }
+
     onclickSubmit() {
-        //Check if the edit should be submitted (innuendos, blank, etc)
+       const textArea = this.targetComment.querySelector('.edit-comment-input');
+       if (textArea.value){
+        submitEdit(this.targetComment);
+        this.closeEditWindow();
+       }
     }
 
     submitEdit(){
+
         //Create Handler for Server Update HERE
     }
-    deleteEditWindow() {
-        //Revert back to normal and delete reference to this handler
-        //if it was a cancel edit throw up the cancel sign
+    openEditWindow(){
+        if(!this.isOpen){
+            this.isOpen = true;
+            //Save the original text content
+            this.content = this.targetComment.querySelector('.comment-content').textContent;
+            //unhide Edit window
+            const editContent = this.targetComment.querySelector('.edit-container');
+            editContent.querySelector('.edit-comment-input').value = this.content;
+            toggleEditVisibility(this.targetComment);
+            this.targetComment.querySelector('.edit-comment-input').focus();
+        }
+
     }
+    closeEditWindow() {
+        if (this.isOpen){
+            toggleEditVisibility(this.targetComment);
+            this.isOpen = false;
+            this.content = null;
+        }
+    }
+        
 
 }
+
 
 const addSelfDestructingEventListener = (element, eventType, callback) => {
     //Add an EventListener that deletes itself when it's called
