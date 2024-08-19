@@ -134,6 +134,7 @@ const replyClick = (targetButton) => {
 }
 
 const editClick = (targetButton) => {
+    //Curently Unused
     //Hide the Comment Content and unhide the TypeArea and resubmit button
     const targetComment = targetButton.closest('.comment');
     //Close previous edit window if it's still open
@@ -194,7 +195,7 @@ const isAdmin = () => {
     return false;
 }
 
-const openDeleteModal = (currentButton) => {
+const openDeleteModal = (targetComment) => {
     document.querySelector('.delete-comment-modal').style.display='block';
     const currentComment = currentButton.closest('.comment');
     document.querySelector ('.confirm-delete-btn').addEventListener ('click', (e) => {
@@ -204,14 +205,11 @@ const openDeleteModal = (currentButton) => {
 }
 
 const deleteComment = (currentComment) => {
-    //TODO: if it was deleted before sent to server delete it completely, otherwise leave it in tree
     currentComment.classList.add('deleted-comment');
     currentComment.querySelector('.comment-content').textContent = "This Comment has been deleted";
     currentComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
     currentComment.querySelector('.username').textContent = 'Deleted';
     cleanupDeletedComment(currentComment);
-    document.querySelector('.delete-comment-modal').style.display='none';
-
     //ADD SERVER UPDATE HERE
 }
 
@@ -333,10 +331,6 @@ class CommentNode {
                 //Create Buffer object for server Update
                 break;
             case 'reply':
-                //this.replyHandler.onClick(this.linkedCommentEl);
-                //If hasnt been created, create a new one
-                //if (!this.replyHandler) this.replyHandler = new ReplyHandler(this.linkedCommentEl, this.id);
-
                 //If there isn't already a replyhandler, initialize it
                 if (!replyHandler) {
                     replyHandler = new ReplyHandler(this.id, this.linkedCommentEl);
@@ -360,17 +354,22 @@ class CommentNode {
                 }
                 break;
             case 'submitEdit': 
-            console.log("Edit Submitted");
-            editHandler.onclickSubmit()
+                console.log("Edit Submitted");
+                editHandler.onclickSubmit()
                 break;
             case 'delete':
                 console.log('delete btn clicked');
                 //Send to delete handler
+                if (!deleteHandler) {
+                    deleteHandler = new DeleteHandler();
+                }
+                deleteHandler.updateData(this.id, this.linkedCommentEl);
+                deleteHandler.showModal();
+                //openDeleteModal(this.linkedCommentEl);
                 break;
             default:
                 break;
         }
-        //If 
     }
     createUpvoteHandler(){
         //Create an Upvote handler and attach it to this node
@@ -618,6 +617,58 @@ class EditHandler {
 
 }
 
+let deleteHandler;
+class DeleteHandler {
+    constructor(targetComment, id){
+        this.targetComment = null;
+        this.id = null;
+        this.isOpen = false;
+        document.querySelector('.confirm-delete-btn').addEventListener ('click', (e) => {
+            this.onClickDeleteComment(this.targetComment);
+            });
+        document.querySelector('.confirm-cancel-btn').addEventListener ('click', (e) => {
+            this.onClickCancel(this.targetComment);
+            });
+    }
+    updateData(newId, newComment){
+        this.targetComment = newComment;
+        this.id = newId;
+    }
+    onClickDeleteComment(){
+         //TODO: if it was deleted before sent to server delete it completely, otherwise leave it in tree
+
+        deleteComment(this.targetComment);
+        this.hideModal();
+        //CREATE SERVER REQUEST PACKAGE HERE
+    }
+    onClickCancel(){
+        this.hideModal();
+    }
+    showModal(){
+        if (!this.isOpen){
+            document.querySelector('.delete-comment-modal').style.display='block';
+            this.isOpen = true;
+
+        }
+        
+    }
+    hideModal(){
+        if (this.isOpen){
+            this.cleanUp();
+            this.isOpen = false;
+        }
+        
+    }
+    cleanUp(){
+        //clear data after modal is hidden to prevent unintended deletions
+        this.targetComment = null;
+        this.id = null;
+        document.querySelector('.delete-comment-modal').style.display='none';
+    }
+
+
+    //Cancel
+}
 
 const addSelfDestructingEventListener = (element, eventType, callback) => {
     //Add an EventListener that deletes itself when it's called
