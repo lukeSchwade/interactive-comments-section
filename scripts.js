@@ -177,24 +177,6 @@ const toggleEditVisibility = (targetComment, visible) => {
     commentContent.classList.toggle('hidden');
     editContent.classList.toggle('hidden');
 }
-
-const swapEditVisibility = (targetComment, visible) => {
-    const deleteBtn = targetComment.querySelector('.delete-btn')
-    const replyBtn = targetComment.querySelector('.reply-btn')
-    const commentContent = targetComment.querySelector('.text-container');
-    const editContent = targetComment.querySelector('.edit-container');
-    if (!visible) {
-        //false means edit card is hidden, true is visible
-        deleteBtn.classList.add('hidden');
-        replyBtn.classList.add('hidden');
-        commentContent.classList.remove('hidden');
-        editContent.classList.remove('hidden')
-    } else {
-        deleteBtn.classList.remove('hidden');
-    }
-    commentContent.classList.toggle('hidden');
-    editContent.classList.toggle('hidden');
-}
 const submitEdit = (targetComment) => {
     const oldComment = targetComment.querySelector('.comment-content');
     const editedText = targetComment.querySelector('.edit-comment-input').value;
@@ -277,12 +259,13 @@ const buildUserReplyNode = (content) => {
     return new CommentTemplate(content);
 }
 
-const submitComment = () => {
+const submitParentComment = () => {
     //Check for innuendos
     const replyWindow = document.getElementById('reply-card');
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent);
     const newComment = buildComment(newNode, true);
+    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true)
     replyWindow.after(newComment);
     replyWindow.querySelector('.submit-comment__input').value = '';
     //SEND SERVER UPDATE HERE
@@ -377,7 +360,7 @@ class CommentNode {
                 }
                 break;
             case 'submitEdit': 
-            console.log("submit edit button clicked");
+            console.log("Edit Submitted");
             editHandler.onclickSubmit()
                 break;
             case 'delete':
@@ -894,7 +877,7 @@ const initializeComments = async() => {
     replyCardBtn.addEventListener('click', (e) => {
         //Only call if TextInput isn't empty
         const textArea = document.getElementById('add-comment-textarea');
-        if (textArea.value) submitComment();
+        if (textArea.value) submitParentComment();
 
     });
 }
