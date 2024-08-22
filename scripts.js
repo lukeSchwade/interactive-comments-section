@@ -716,20 +716,45 @@ const toPlural = (qty, word) => {
 //OVERHAUL THE EVENT LISTENER LOGIC
 //Need to create one listener per comment and determine what the click is doing with delegation
 
+const sendcommentPOSTpayload =  () => {
+    
+}
+
 //Fetches a batch of comments from server and builds them on the DOM
 const initializeComments = async() => {
-    // Fetch the comment Data from server
-    const fetchData2 = async () => {
-        return fetch('./data.json')
+    const serverURL = './example.json';
+    const defaultURL = './data.json';
+    const fetchCommentData = async () => {
+        return fetch(serverURL)
+        // JSONify the response
+        .then(res => res.json())
+        // return the data
+        .then(data => data)
+        .catch(err => {
+            throw new Error("Error contacting server")
+        });
+    }
+    const defaultFetchCommentData = async () => {
+        return fetch(defaultURL)
         // JSONify the response
         .then(res => res.json())
         // return the data
         .then(data => data)
         .catch(err => console.log("Error resolving comments:", err))
     }
-    // Seperate json data into userData and commentData
+    const fetchCommentWrapper = async () => {
+        let result;
+        try {
+            result = await fetchCommentData();
+        } catch (error) {
+            //Default function to fetch local data if server is unavailable
+            result = await defaultFetchCommentData();
+        } finally {
+            return result;
+        }
+    }
     // TODO split currentUser and comments into separate files and change this logic
-    const dataResult = await fetchData2();
+    const dataResult = await fetchCommentWrapper();
     //Split the recieved data into related fragments
     userData = dataResult.currentUser;
     totalComments = dataResult.totalComments;
