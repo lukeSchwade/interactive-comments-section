@@ -113,8 +113,6 @@ const submitEdit = (targetComment) => {
     oldComment.textContent = editedText;
 }
 
-
-
 const deleteComment = (currentComment) => {
     //Client Side deletion of Node
     currentComment.classList.add('deleted-comment');
@@ -301,8 +299,6 @@ class CommentNode {
         //Clear all references and listeners to free up memory when a comment is deleted
     }
 }
-
-
 
 class UpvoteHandler {
     //Attached to every upvote widget and manages the votes
@@ -672,11 +668,6 @@ const buildReplyCard = () => {
     clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
     const submitReplyBtn = clonedCard.querySelector('.add-comment__btn');
     return clonedCard;
-}
-
-
-const waitForUserInput = async () => {
-
 }
 
 const convertDateToFromNow = (date) => {
