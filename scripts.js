@@ -11,6 +11,7 @@ const upvoteHandlers = [];
 //clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
 //IMPORTS GO HERE
+import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -112,15 +113,7 @@ const submitEdit = (targetComment) => {
     oldComment.textContent = editedText;
 }
 
-const isCurrentUser = (input) => {
-    // Check if a variable is current user
-    const currentUser = sessionStorage.getItem('username');
-    return input == currentUser ? true : false;
-}
 
-const isAdmin = () => {
-    return false;
-}
 
 const deleteComment = (currentComment) => {
     //Client Side deletion of Node
