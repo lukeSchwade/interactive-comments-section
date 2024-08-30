@@ -309,12 +309,16 @@ class UpvoteHandler {
         this.upvoteBtn = this.buttonWidget.querySelector('.vote-btn.plus');
         this.downvoteBtn = this.buttonWidget.querySelector('.vote-btn.minus');
         this.id = id;
+        this.spamHandler = null;
     }
     onClick(evt){
         //Find closest button
         //First implementation (will need to refactor to include all buttons, just a proof of concept)
         //This if statement wrapper catches exceptions
         //Determine how to update the state
+        //Create an Upvote Payload 
+        if (!this.spamHandler) this.spamHandler = new UpvotePayload(this.id, 'admin000', this.state) //FIXME: fix actual user ID
+        
         if (evt.target.closest('button')) {
             let target = evt.target.closest('button');
             if (target.className.includes('plus')) {
@@ -323,6 +327,8 @@ class UpvoteHandler {
                 this.updateState(-1);
             }
         }
+
+
     }
     updateState(newState){
         //Change the state based on which button was pressed
@@ -331,15 +337,20 @@ class UpvoteHandler {
             this.state = 0;
             this.updateVisual(newState);
             //Send a server update HERE
+            this.spamHandler.updateState(this.state)
         //If the state has to increment by more than 1 (eg +1 to -1)
         } else if (this.state + newState == 0) {
             this.state = newState;
             this.updateVisual(newState*2);
             //Send a server update HERE
+            this.spamHandler.updateState(this.state)
+
         } else {
             this.state = newState;
             this.updateVisual(newState);
             //Send a server Update HERE
+            this.spamHandler.updateState(this.state)
+
         }
     }
     updateVisual(newState) {
@@ -426,9 +437,10 @@ class ReplyHandler {
             submitReply(evt);
             //Update the ID before sending server request
             this.id = totalComments;
-            console.log(`Server payload: Parent comment ID: ${this.parentId}, new comment ID: ${this.id}, content`);
-            //SEND SERVER UPDATE HERE
+            //console.log(`Server payload: Parent comment ID: ${this.parentId}, new comment ID: ${this.id}, content`);
             //Create a server payload object
+            //FIXME: Correct the user id  when finished
+            new AddCommentPayload(this.id, this.parentId, 'admin000', textArea.value)
         }
         //payload: Parent comment ID, current user ID, current comment ID (resolve serverside), content of comment
     }
@@ -458,8 +470,11 @@ class EditHandler {
     onclickSubmit() {
        const textArea = this.targetComment.querySelector('.edit-comment-input');
        if (textArea.value){
+        const newContent = textArea.value;
         submitEdit(this.targetComment);
         //SEND SERVER UPDATE HERE
+        //FIXME: fix user id
+        new EditPayload(this.id, 'admin000', newContent)
         this.closeEditWindow();
         
        }
@@ -509,7 +524,10 @@ class DeleteHandler {
          //TODO: if it was deleted before sent to server delete it completely, otherwise leave it in tree
 
         deleteComment(this.targetComment);
+        //FIXME: Correct the user ID when fixed
+        new DeleteCommentPayload(this.id, 'admin000')
         this.hideModal();
+        
         //CREATE SERVER UPDATE PAYLOAD HERE
     }
     onClickCancel(){
@@ -575,25 +593,74 @@ const buildComment = (currentNode) => {
     return clonedComment;
 }
 
+const sendPostRequest = (payload) => {
+    
+}
+const filterCommentPayload = (instance) => {
+    //Filters out any unnecessary keys from the instance 
+    const allowedKeys = ['id', 'parentId', 'userId', 'content', 'payloadType', 'stateChange']
+    const finalPayload = {};
+    Object.keys(instance).forEach(key => {
+        if (allowedKeys.includes(key)) {
+          finalPayload[key] = instance[key];
+        }
+      });
+    
+    return finalPayload;
+}   
+const sendServerCommentPayload = (payload) => {
+    //Default is get
+    let requestMethod = 'GET';
+    switch (payload.typeOfPayload) {
+        case 'addComment':
+            requestMethod = 'POST'
+            break;
+        case 'editComment':
+        case 'deleteComment':
+        case 'changeVote':
+            requestMethod = 'PATCH'
+            break;
+        default:
+            break;
+    }
+    console.log(`payload sent! contents: ${payload}, method: ${requestMethod}`);
+    // fetch (`${serverURL}/api/comments`, {
+    //     method: requestMethod,
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ key: 'new value' }),
+    // })
+    // .then(response => response.json())
+    // .then (data => console.log(data))
+}
+
+
+
 class ServerPayload {
     constructor(commentId) {
         //Types of server submissions: editComment, addComment, deleteComment, changeVote
-        this.typeOfPayload = null;
+        this.typeOfPayload;
         this.id = commentId;
     }
     messageServer(){
-        console.log (Object.getOwnPropertyNames(this));
+       // console.log (Object.getOwnPropertyNames(this));
+        const payload = filterCommentPayload(this);
         //Send the Server the contents of the payload
+        console.log(payload);
+        this.markForCleanup();
+
     }
     markForCleanup(){
+        //console.log("Payload marked for cleanup!")
         //Method that wipes out the object when a server response is made
-
     }
 }
 
+
 class AddCommentPayload extends ServerPayload {
     constructor(id, parentId, userId, content){
-        //Contents: id, parent ID, userSubmitter, and content
+        //Contents: id, parent ID, userID, content, and type
         super(id);
         this.parentId = parentId;
         this.userId = userId;
@@ -602,9 +669,9 @@ class AddCommentPayload extends ServerPayload {
         this.messageServer();
     }
 }
-class deleteCommentPayload extends ServerPayload {
+class DeleteCommentPayload extends ServerPayload {
     constructor (id, userId){
-        //Contents: id, userID
+        //Contents: id, userID, type
         super (id);
         this.userId = userId;
         this.payloadType = "deleteComment";
@@ -623,26 +690,58 @@ class EditPayload extends ServerPayload {
     }
 }
 class UpvotePayload extends ServerPayload {
+    //Possible pattern: create an array of upvote payloads, and every 60 seconds iterate through them and delete instances
+    //with a completed key
     constructor(id, userId, initialStateChange){
         //contents: id, userID of voter, and stateChange
         super(id);
         this.userId = userId;
         //Should only be -1, 0 or +1
+        this.initialState = initialStateChange;
         this.stateChange = initialStateChange;
-        initializeTimer();
+        this.payloadType = "changeUpvote";
+        this.initializeTimer();
+
     }
     initializeTimer(){
-        //anti-spam timer that waits 2 seconds after the last state change (refreshing state resets the timer) before sending server request
+        //anti-spam timer that waits 2 seconds after the last state change before sending server request 
 
+        this.remainingTime = 2;
+        this.intervalTimer = setInterval(() => this.updateTimer(), 1000) // this uses the wrong 'this' without arrow function
+        //If timer hits 0, send server request
+    }
+    updateTimer(){
+
+        //Only send server request when the timer is 0, and if the state change is different from original
+        if(this.remainingTime <= 0) {
+            if (this.initialState != this.stateChange) {
+                this.messageServer();
+                //Reset the 'original' state to new state since last server reponse
+                this.initialState = this.stateChange;
+            }
+            
+            clearInterval(this.intervalTimer);
+            this.intervalTimer = null;
+        }
+        this.remainingTime --;
     }
     updateState(newState){
-        //Update the statechange
+       
         this.stateChange = newState;
+         //If timer isn't running, restart it
+        if (!this.intervalTimer) {
+            this.initializeTimer();
+            //and change the original state change
+            
+        } 
+        this.resetTimer();
     }
     resetTimer(){
-
+        this.remainingTime = 2;
     }
 }
+
+
 const createReplyWindow = (parentComment) => {
     //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
     //const targetComment = targetButton.closest('.comment');
@@ -716,13 +815,11 @@ const toPlural = (qty, word) => {
 //OVERHAUL THE EVENT LISTENER LOGIC
 //Need to create one listener per comment and determine what the click is doing with delegation
 
-const sendcommentPOSTpayload =  () => {
-    
-}
 
 //Fetches a batch of comments from server and builds them on the DOM
 const initializeComments = async() => {
-    const serverURL = './example.json';
+    //CHANGE THIS to DIFFERENT ADDRESS LATER
+    const serverURL = `http://localhost:3000/api/comments/get`;
     const defaultURL = './data.json';
     const fetchCommentData = async () => {
         return fetch(serverURL)
@@ -743,6 +840,7 @@ const initializeComments = async() => {
         .catch(err => console.log("Error resolving comments:", err))
     }
     const fetchCommentWrapper = async () => {
+        //This tries to contact server, if it can't then it loads the default data
         let result;
         try {
             result = await fetchCommentData();
@@ -780,7 +878,12 @@ const initializeComments = async() => {
     replyCardBtn.addEventListener('click', (e) => {
         //Only call if TextInput isn't empty
         const textArea = document.getElementById('add-comment-textarea');
-        if (textArea.value) submitParentComment();
+        if (textArea.value) {
+            const content = textArea.value;
+            submitParentComment();
+            //FIXME: Correct the actual user ID when it's done
+            new AddCommentPayload (totalComments, 0, 'admin000', content);
+        } 
 
     });
 }
