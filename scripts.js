@@ -266,7 +266,6 @@ class CommentNode {
             replyHandler.updateParentObjectData(this.id, this.linkedCommentEl);
         }
         replyHandler.repositionReplyCard(this.linkedCommentEl);
-        console.log('reply btn clicked');
     }
     createEditHandler(){
         //Create handler if it doesn't exist otherwise update it.
@@ -429,7 +428,6 @@ class ReplyHandler {
         //TODO: Check for innuendos
         //TODO: Check for any conflicts
         const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
-        console.log("onCLickReplyFires");
 
         //Check for blanks, innuendos, etc
         if (textArea.value) {            
