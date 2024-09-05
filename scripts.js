@@ -598,7 +598,7 @@ const sendPostRequest = (payload) => {
 }
 const filterCommentPayload = (instance) => {
     //Filters out any unnecessary keys from the instance 
-    const allowedKeys = ['id', 'parentId', 'userId', 'content', 'payloadType', 'stateChange']
+    const allowedKeys = ['commentId', 'parentId', 'userId', 'content', 'payloadType', 'stateChange']
     const finalPayload = {};
     Object.keys(instance).forEach(key => {
         if (allowedKeys.includes(key)) {
@@ -641,7 +641,7 @@ class ServerPayload {
     constructor(commentId) {
         //Types of server submissions: editComment, addComment, deleteComment, changeVote
         this.typeOfPayload;
-        this.id = commentId;
+        this.commentId = commentId;
     }
     messageServer(){
        // console.log (Object.getOwnPropertyNames(this));
