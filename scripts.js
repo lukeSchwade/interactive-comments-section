@@ -60,7 +60,7 @@ class GeneralTree {
             // recursive helper to traverse the tree
             if (!currentNode) return;
 
-            console.log(`build comment ${currentNode.id} and Comment Object here`);
+            //console.log(`build comment ${currentNode.id} and Comment Object here`);
             let builtComment = buildComment(currentNode);
 
             if (!builtComment.querySelector('.deleted-comment')){
@@ -78,7 +78,7 @@ class GeneralTree {
                 appendTarget.appendChild(traverse(childNode, builtComment));
             }
             if (!currentNode.parentId) {
-                console.log("root comment is appended to DOM here");
+                //console.log("root comment is appended to DOM here");
                 //Add an ID to find and then Delete when used
                
                 appendHere.appendChild(builtComment);
@@ -240,11 +240,9 @@ class CommentNode {
                 this.createReplyHandler();
                 break;
             case 'edit':
-                console.log('edit button clicked');
                 this.createEditHandler();
                 break;
             case 'submitEdit': 
-                console.log("Edit Submitted");
                 editHandler.onclickSubmit()
                 break;
             case 'delete':
@@ -278,7 +276,6 @@ class CommentNode {
         }
     }
     createDeleteHandler(){
-        console.log('delete btn clicked');
         
         if (!deleteHandler) {
             deleteHandler = new DeleteHandler();
@@ -435,7 +432,6 @@ class ReplyHandler {
             submitReply(evt);
             //Update the ID before sending server request
             this.id = totalComments;
-            //console.log(`Server payload: Parent comment ID: ${this.parentId}, new comment ID: ${this.id}, content`);
             //Create a server payload object
             //FIXME: Correct the user id  when finished
             new AddCommentPayload(this.id, this.parentId, 'admin000', textArea.value)
@@ -621,7 +617,7 @@ const sendServerCommentPayload = (payload) => {
         default:
             break;
     }
-    console.log(`payload sent! contents: ${payload}, method: ${requestMethod}`);
+    console.log(`payload sent! body: ${payload}, method: ${requestMethod}`);
     // fetch (`${serverURL}/api/comments`, {
     //     method: requestMethod,
     //     headers: {
