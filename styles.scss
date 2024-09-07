@@ -101,10 +101,35 @@ body {
     @include flex-container(column);
     gap: 1.5em;
 }
-.comment, .add-comment-container {
+.comment, .add-comment-container, .dropdown-container {
     @include commentBlock;
 
 }
+.dropdown-container {
+    max-width: max-content;
+    padding: 0.75em;
+    @include commentFormat();
+}
+
+select {
+    // A reset of styles, including removing the default dropdown arrow
+    appearance: none;
+    // Additional resets for further consistency
+    border:none;
+    outline: 1px solid $light-gray;
+    padding: 0.25em 0.5em;
+    margin: 0 0 0 .5em;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: inherit;
+    cursor: pointer;
+    line-height: 1.1;
+    @include roundedEdges(4px);
+    background-color: $very-light-gray;
+
+}
+
+
 //GRID DISPLAY FOR SINGLE COMMENT TREE
 .comment-tree-grid-container {
     display: grid;

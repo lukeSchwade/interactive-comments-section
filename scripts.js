@@ -602,6 +602,22 @@ const filterCommentPayload = (instance) => {
     
     return finalPayload;
 }   
+
+class SortHandler {
+    constructor() {
+        this.dropdownElement = document.getElementById('sort-dropdown');
+        this.sortMethod = 'new'; //Default
+        this.dropdownElement.addEventListener("change", (evt) => this.changeSelection(evt));
+    }
+
+    changeSelection(evt){
+        const selection = evt.target.value;
+        console.log('Sort by: ' + selection);
+        //Server request goes here
+    }
+}
+const sortHandler = new SortHandler();
+
 const sendServerCommentPayload = (payload) => {
     //Default is get
     let requestMethod = 'GET';
@@ -618,16 +634,9 @@ const sendServerCommentPayload = (payload) => {
             break;
     }
     console.log(`payload sent! body: ${payload}, method: ${requestMethod}`);
-    // fetch (`${serverURL}/api/comments`, {
-    //     method: requestMethod,
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ key: 'new value' }),
-    // })
-    // .then(response => response.json())
-    // .then (data => console.log(data))
+
 }
+
 
 
 

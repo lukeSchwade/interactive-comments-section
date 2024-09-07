@@ -15,7 +15,7 @@
 <body>
   <main class="main-page-container">
     <div id="comments-section" class="comment-wrapper">
-      <!-- Pull dynamic content from the data.json file -->
+
 
       <div id="reply-card" class="add-comment-container">
         <img class="user-avatar"src="./images/avatars/image-juliusomo.png" alt="your-avatar">
@@ -26,6 +26,19 @@
          
         <button id="reply-card-submit-btn"class="add-comment__btn">SEND</button>
       </div>
+      <div class="dropdown-container">
+
+          <label for="sort-by">Sort by:
+            <select name="sort-by" id="sort-dropdown">
+              <option value="top">Top</option>
+              <option value="new" selected>New</option>
+              <option value="old">Oldest</option>
+
+            </select>
+          </label>
+      </div>
+
+      <!-- Pull dynamic content from the data.json file -->
       <div class="delete-comment-modal">
         <div class="modal-content">
             <h2>Delete comment</h2>
