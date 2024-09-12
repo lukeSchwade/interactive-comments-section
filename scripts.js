@@ -171,7 +171,8 @@ const submitParentComment = () => {
     const newNode = buildUserReplyNode(newContent);
     const newComment = buildComment(newNode, true);
     new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true)
-    replyWindow.after(newComment);
+    const sortByWidget = document.getElementById('sort-by-dropdown');
+    sortByWidget.after(newComment);
     replyWindow.querySelector('.submit-comment__input').value = '';
     //SEND SERVER UPDATE HERE
 }
