@@ -345,9 +345,32 @@ button {
   outline: 1px solid hsl(238, 40%, 52%);
 }
 
+.error-modal {
+  position: fixed;
+  bottom: 10px;
+  left: 45vw;
+  background-color: hsl(358, 79%, 66%);
+  color: hsl(223, 19%, 93%);
+  font-size: 12px;
+  min-width: 20px;
+  padding: 1em;
+}
+
+.fade-in-visible {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.25s linear;
+}
+
+.fade-in-hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s 0.75s, opacity 0.5s linear;
+}
+
 .delete-comment-modal {
   display: none;
-  position: fixed;
+  position: sticky;
   left: 0;
   top: 0;
   z-index: 3;

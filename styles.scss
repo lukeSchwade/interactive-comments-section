@@ -372,10 +372,32 @@ button {
     outline: 1px solid $moderate-blue;
 }
 
+//ERROR MODAL 
+.error-modal {
+    position: fixed;
+    bottom: 10px;
+    left: 45vw;
+    background-color: $soft-red;
+    color: $light-gray;
+    font-size: 12px;
+    min-width: 20px;
+    padding: 1em;
+}
+
+.fade-in-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.25s linear;
+}
+.fade-in-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.75s, opacity 0.5s linear;
+}
 //DELETE MODAL
 .delete-comment-modal {
     display: none;
-    position: fixed;
+    position: sticky;
     left: 0;
     top: 0;
     z-index: 3;

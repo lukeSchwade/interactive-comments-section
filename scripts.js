@@ -12,6 +12,7 @@ const upvoteHandlers = [];
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
+import { showError, hideError } from "./modules/clientrendering.mjs";
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -28,6 +29,8 @@ class CommentTemplate {
         };
     }
 }
+
+
 class GeneralTree {
     //This renders a tree of comments and children and places them on the DOM
     constructor(){
@@ -895,7 +898,11 @@ let userData;
 //Show the comment Section
 initializeComments();
 
+const bugTest = () => {
+    showError(401, `You can't do that`);
+}
 
+document.querySelector('.bugtest-button').addEventListener('click', bugTest);
 //INVALID USERNAMES: 'DELETED'
 //TODO
 
