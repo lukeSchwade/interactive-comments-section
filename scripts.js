@@ -13,6 +13,7 @@ let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
 import { showError, hideError } from "./modules/clientrendering.mjs";
+import { get } from "mongoose";
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -819,14 +820,29 @@ const toPlural = (qty, word) => {
 //then it will send the final state change to the server
 //there will need to be server side spam detection to prevent workarounds (like refreshspamming to get around delay)
 
-//OVERHAUL THE EVENT LISTENER LOGIC
-//Need to create one listener per comment and determine what the click is doing with delegation
-
-
 //Fetches a batch of comments from server and builds them on the DOM
+//Object that handles interaction w the server
+class ClientHandler {
+    //Possibly unused framework for handling comments
+    constructor(){
+        this.totalComments = 0;
+        this.
+    }
+    initialFetchComments(){
+        //initial fetch of comments with default sort method
+    }
+    fetchComments(){
+        //Grab the sort method
+        //Fetch the 
+    }
+}
+
+const FetchComments = (sortBy){
+    //Fetch Comments
+}
 const initializeComments = async() => {
-    //CHANGE THIS to DIFFERENT ADDRESS LATER
-    const serverURL = `http://localhost:3000/api/comments/get`;
+    //Fetches from Server, if that fails populates from test data
+    const serverURL = `http://localhost:3000/comments/get/1-15/`;//CHANGE THIS to DIFFERENT ADDRESS LATER
     const defaultURL = './data.json';
     const fetchCommentData = async () => {
         return fetch(serverURL)
