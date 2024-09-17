@@ -826,7 +826,9 @@ class ClientHandler {
     //Possibly unused framework for handling comments
     constructor(){
         this.totalComments = 0;
-        this.
+        //Nums to determine where the fetch starts and ends 
+        this.fetchStart = 0;
+        this.FetchEnd = 0;
     }
     initialFetchComments(){
         //initial fetch of comments with default sort method
@@ -837,7 +839,7 @@ class ClientHandler {
     }
 }
 
-const FetchComments = (sortBy){
+const FetchComments = (sortBy) =>{
     //Fetch Comments
 }
 const initializeComments = async() => {
