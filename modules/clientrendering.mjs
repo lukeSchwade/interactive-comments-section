@@ -15,5 +15,30 @@ const hideError = () => {
     errorModal.classList.add('fade-in-hidden');
 }
 
+const fadeBackground = () => {
+    //Fades in the background gray
+    const background = document.querySelector('.background-fade');
+    background.classList.remove('fade-in-hidden');
+    background.classList.add('fade-in-visible');
+}
 
-export { showError, hideError };
+const unfadeBackground = () => {
+    const background = document.querySelector('.background-fade');
+    background.classList.remove('fade-in-visible');
+    background.classList.add('fade-in-hidden');
+}
+
+
+const showLogin = () => {
+    fadeBackground();
+    const loginModal = document.querySelector('.login-modal-container');
+    loginModal.classList.remove('hidden');
+}
+
+const hideLogin = () =>{
+    unfadeBackground();
+    const loginModal = document.querySelector('.login-modal-container');
+    loginModal.classList.add('hidden');
+}
+
+export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground };

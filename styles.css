@@ -365,19 +365,18 @@ button {
 .fade-in-hidden {
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s 0.75s, opacity 0.5s linear;
+  transition: visibility 0s 0.2s, opacity 0.2s linear;
 }
 
 .delete-comment-modal {
-  display: none;
-  position: sticky;
+  position: fixed;
   left: 0;
   top: 0;
   z-index: 3;
-  background-color: rgba(0, 0, 0, 0.4);
   width: 100%;
   height: 100%;
   align-content: center;
+  display: none;
 }
 .delete-comment-modal .modal-content {
   border-radius: 8px;
@@ -416,6 +415,71 @@ button {
   flex-direction: row;
   gap: 1em;
   justify-content: space-between;
+}
+
+.login-modal-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  align-content: center;
+}
+.login-modal-container .login-modal {
+  border-radius: 8px;
+  position: relative;
+  margin: auto;
+  background-color: hsl(0, 0%, 100%);
+  padding: 2em;
+  width: 90%;
+  min-height: 10vh;
+  z-index: 3;
+  max-width: 600px;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.2), 0 4px 20px 0 rgba(0, 0, 0, 0.19);
+}
+.login-modal-container h2 {
+  font-size: 20px;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+.login-modal-container label {
+  margin-top: 1em;
+}
+.login-modal-container input {
+  border: 1px solid hsl(223, 19%, 93%);
+  height: 2em;
+  padding-left: 0.75em;
+}
+.login-modal-container button {
+  padding: 1em 1.5em;
+  font-weight: 500;
+  flex: 1;
+}
+.login-modal-container .login-button {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(211, 10%, 45%);
+  border-radius: 8px;
+}
+.login-modal-container .register-button {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(238, 40%, 52%);
+  border-radius: 8px;
+}
+
+.login-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.background-fade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .hidden {

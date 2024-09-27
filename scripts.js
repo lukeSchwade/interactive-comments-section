@@ -12,8 +12,8 @@ const upvoteHandlers = [];
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
-import { showError, hideError } from "./modules/clientrendering.mjs";
-import { get } from "mongoose";
+import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground } from "./modules/clientrendering.mjs";
+//import { get } from "mongoose";
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -536,12 +536,15 @@ class DeleteHandler {
         if (!this.isOpen){
             document.querySelector('.delete-comment-modal').style.display='block';
             this.isOpen = true;
+            fadeBackground();
         }
     }
     hideModal(){
         if (this.isOpen){
             this.cleanUp();
+            unfadeBackground();
             this.isOpen = false;
+
         }
     }
     cleanUp(){
@@ -553,6 +556,90 @@ class DeleteHandler {
 
 }
 
+let loginHandler;
+class LoginHandler {
+    constructor(){
+        this.isOpen = false;
+        this.addEventListeners();
+
+    }
+    addEventListeners(){
+        document.getElementById('loginForm').addEventListener('submit', this.submitLogin );
+        document.getElementById('registerForm').addEventListener('submit', this.submitRegister);
+        
+    }
+    async submitLogin(event){
+        //await for serverpayload
+        //If it's an error, explain why
+        event.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const serverUrl = `https:localHost:5500` //CHANGE ME
+        const response = await fetch (`${serverUrl}/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        console.log(data); // Handle the response from the server
+    }
+    async submitRegister(event){
+        //Await server response
+        //If registration is successful, submit a login request as well
+        event.preventDefault(); // Prevent the default form submission
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+        const serverUrl = `https:localHost:5500` //CHANGE ME
+
+        const response = await fetch(`${serverUrl}/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+    
+        const data = await response.json();
+        console.log(data); // Handle the response from the server
+        
+        if (data) {
+            //If response is error code, explain why
+        } else if (data){
+            //if it succeeds, submit a login attempt as well.
+            this.submitLogin(event);
+            this.closeModal();
+        }   
+    }
+    handleGlobalClick(evt){
+        //If the click did not happen inside the Modal, close the modal
+        if (loginHandler.isOpen && !evt.target.closest('.login-modal')){
+            loginHandler.closeModal(); 
+            //'this' refers to the event, so need to use loginHandler
+        }
+    }
+    openModal(){
+        //Open the modal
+        showLogin();
+        document.addEventListener('click', this.handleGlobalClick);
+        this.isOpen = true;
+    }
+    closeModal(){
+        hideLogin();
+        this.isOpen = false;
+        this.cleanUp();
+    }
+    cleanUp(){
+        //Remove eventlisteners and clean form inputs
+        document.removeEventListener('click,', this.handleGlobalClick);
+    }
+}
+
+loginHandler = new LoginHandler();
+const submitLoginPayload = (username, password) => {
+
+}
 const addSelfDestructingEventListener = (element, eventType, callback) => {
     //Add an EventListener that deletes itself when it's called
     //UNUSED
@@ -592,9 +679,7 @@ const buildComment = (currentNode) => {
     return clonedComment;
 }
 
-const sendPostRequest = (payload) => {
-    
-}
+
 const filterCommentPayload = (instance) => {
     //Filters out any unnecessary keys from the instance 
     const allowedKeys = ['commentId', 'parentId', 'userId', 'content', 'payloadType', 'stateChange']
@@ -920,7 +1005,16 @@ const bugTest = () => {
     showError(401, `You can't do that`);
 }
 
+const bugTestLogin = (event) => {
+    event.stopImmediatePropagation();
+
+    if (!loginHandler.isOpen){
+        loginHandler.openModal();
+    }
+}
+
 document.querySelector('.bugtest-button').addEventListener('click', bugTest);
+document.querySelector('.bugtest-login').addEventListener('click', bugTestLogin)
 //INVALID USERNAMES: 'DELETED'
 //TODO
 

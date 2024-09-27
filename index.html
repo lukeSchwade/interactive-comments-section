@@ -52,8 +52,32 @@
       <div class="error-modal fade-in-hidden">
           <div class="error-message ">Error: This is a placeholder message</div>
       </div>
+      <div class="login-modal-container hidden">
+        <div class="login-modal">
+          <h2>Login</h2>
+          <form class="login-modal-form" id="loginForm">
+              <label for="username">Username:</label>
+              <input type="text" id="loginUsername" name="username" required>
+              <label for="loginPassword">Password:</label>
+              <input type="password" id="loginPassword" name="password" required>
+              <button class="login-button" type="submit">Login</button>
+          </form>
+      
+          <h2>or... if you need to Register</h2>
+          <p>Do not use a password you use elswhere please, don't make me responsible for that</p>
+          <form class="login-modal-form" id="registerForm">
+              <label for="registerUsername">Username:</label>
+              <input type="text" id="registerUsername" name="username" required>
+              <label for="registerPassword">Password:</label>
+              <input type="password" id="registerPassword" name="password" required>
+              <button class="register-button" type="submit">Register</button>
+          </form>
+        </div>
+      </div>
     </div>
+    <button class="bugtest-login">Click me to show Login</button>
     <button class="bugtest-button">Click me to Show Error Message</button>
+    <div class="background-fade fade-in-hidden"></div>
   </main>
 
 <!-- TEMPLATES -->
