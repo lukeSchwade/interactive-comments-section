@@ -682,7 +682,7 @@ const buildComment = (currentNode) => {
 
 const filterCommentPayload = (instance) => {
     //Filters out any unnecessary keys from the instance 
-    const allowedKeys = ['commentId', 'parentId', 'userId', 'content', 'payloadType', 'stateChange']
+    const allowedKeys = ['commentId', 'parentId', 'userId', 'content', 'payloadType', 'stateChange', 'increment']
     const finalPayload = {};
     Object.keys(instance).forEach(key => {
         if (allowedKeys.includes(key)) {
@@ -792,6 +792,7 @@ class UpvotePayload extends ServerPayload {
         //Should only be -1, 0 or +1
         this.initialState = initialStateChange;
         this.stateChange = initialStateChange;
+        this.increment = 0;
         this.payloadType = "changeUpvote";
         this.initializeTimer();
 
@@ -799,7 +800,7 @@ class UpvotePayload extends ServerPayload {
     initializeTimer(){
         //anti-spam timer that waits 2 seconds after the last state change before sending server request 
 
-        this.remainingTime = 2;
+        this.remainingTime = 1;
         this.intervalTimer = setInterval(() => this.updateTimer(), 1000) // this uses the wrong 'this' without arrow function
         //If timer hits 0, send server request
     }
@@ -808,7 +809,10 @@ class UpvotePayload extends ServerPayload {
         //Only send server request when the timer is 0, and if the state change is different from original
         if(this.remainingTime <= 0) {
             if (this.initialState != this.stateChange) {
+                this.increment = this.stateChange-this.initialState; //The actual increment to send server
                 this.messageServer();
+                //Figure out the increment to tell server; if you went from +1 to -1, server needs to be sent -2
+                
                 //Reset the 'original' state to new state since last server reponse
                 this.initialState = this.stateChange;
             }
