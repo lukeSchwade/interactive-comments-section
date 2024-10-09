@@ -12,7 +12,7 @@ const upvoteHandlers = [];
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
-import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground } from "./modules/clientrendering.mjs";
+import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization } from "./modules/clientrendering.mjs";
 //import { get } from "mongoose";
 class CommentTemplate {
     //Class for a comment data for purpose of building replies
@@ -561,7 +561,8 @@ class LoginHandler {
     constructor(){
         this.isOpen = false;
         this.addEventListeners();
-
+        //Add the customization widget to the Login Modal
+        displayAvatarCustomization(document.getElementById('registerCustomizationContainer'));
     }
     addEventListeners(){
         document.getElementById('loginForm').addEventListener('submit', this.submitLogin );
@@ -624,6 +625,7 @@ class LoginHandler {
         showLogin();
         document.addEventListener('click', this.handleGlobalClick);
         this.isOpen = true;
+        avatarHandler.refreshColors();
     }
     closeModal(){
         hideLogin();
@@ -640,6 +642,64 @@ loginHandler = new LoginHandler();
 const submitLoginPayload = (username, password) => {
 
 }
+class AvatarButton {
+    //A class for each button which keeps track of all the 
+    constructor(targetIcon){
+        this.targetIcon = targetIcon;
+        this.svgForeground = targetIcon.querySelector('.foreground');
+        this.svgBackground = targetIcon.querySelector('.background');
+
+    }
+    changeForeground (newColor){
+        this.svgForeground.setAttribute('fill', newColor);
+    }
+    changeBackground(newColor){
+        this.svgBackground.setAttribute('fill', newColor);
+
+    }
+}
+class AvatarCustomizationHandler {
+    constructor(){
+        this.container = document.querySelector('avatar-customization-container');
+        this.Buttons = []
+        this.createEventHandlers();
+    }
+    createEventHandlers(){
+        const mainColorInput = document.getElementById('main-color-picker');
+        const backgroundColorInput = document.getElementById('background-color-picker');
+        document.querySelectorAll('.avatar-button').forEach((button) => {
+            this.Buttons.push(new AvatarButton(button));
+        });
+        mainColorInput.addEventListener('input', (evt) => {
+            this.changeColors('front', evt.target.value);
+        });
+        backgroundColorInput.addEventListener('input', (evt) => {
+            this.changeColors('back', evt.target.value);
+        });
+    }
+    changeColors(whichColor, newColor){
+        if (whichColor == 'front') {
+            this.Buttons.forEach(icon => icon.changeForeground(newColor));
+        } else if (whichColor == 'back') {
+            this.Buttons.forEach(icon => icon.changeBackground(newColor));
+            
+        }
+    }
+    refreshColors(){
+        //When the modal Opens, get the correct colors
+        const newFront = document.getElementById('main-color-picker').value;
+        const newBack = document.getElementById('background-color-picker').value;
+        this.changeColors('front', newFront);
+        this.changeColors('back', newBack);
+    }
+    moveModal(targetElement){
+        //Moves the whole thing elsewhere
+    }
+
+}
+//Make a handler for each icon
+let avatarHandler = new AvatarCustomizationHandler();
+
 const addSelfDestructingEventListener = (element, eventType, callback) => {
     //Add an EventListener that deletes itself when it's called
     //UNUSED
@@ -912,7 +972,7 @@ const toPlural = (qty, word) => {
 //Fetches a batch of comments from server and builds them on the DOM
 //Object that handles interaction w the server
 class ClientHandler {
-    //Possibly unused framework for handling comments
+    //Possibly unused framework for handling comments and keeping all the handlers together
     constructor(){
         this.totalComments = 0;
         //Nums to determine where the fetch starts and ends 

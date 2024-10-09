@@ -461,7 +461,7 @@ button {
     }
     h2 {
         font-size: 20px;
-        margin-top: 1em;
+        margin-top: 0.5em;
         margin-bottom: 0.5em;
     }
     label {
@@ -490,6 +490,58 @@ button {
     gap: 0.5em;
 }
 
+.avatar-customization-container {
+    @include flex-container(column);
+    gap: 1em;
+}
+
+.avi-choice {
+    align-self:center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 90%;
+    justify-items: center;
+    @include media('small'){
+        grid-template-columns: repeat(4, 1fr);
+    }
+    input {
+        opacity: 0;
+        height: 0;
+        width: 0;
+        position: absolute;
+    }
+    .button-container {
+        @include roundedEdges();
+        flex: 1 1 50px;
+        min-width: fit-content;
+        max-width: fit-content;
+        cursor: pointer;
+        outline: 1px $light-gray solid;
+        background-color: $very-light-gray;
+        transition: transform 50ms;
+    }
+    .button-container:has(input:checked) {
+        background-color: $light-grayish-blue;
+        outline: 1px $light-grayish-blue solid;
+        transform: scale(1.05);
+    }
+    .button-container:hover {
+        background-color: $light-grayish-blue;
+    }
+    .button-container:active {
+        outline: 1px $grayish-blue solid;
+        transform: scale(0.99);
+    }
+    .avatar-button {
+        @include flex-container();
+        padding: 0.25em;
+        justify-content: center;
+    }
+    .color-picker-container {
+        @include flex-container(row);
+    }
+}
+
 .background-fade {
     position:fixed;
     top:0;
@@ -506,7 +558,6 @@ button {
 button {
     transition: all 150ms;
     position: relative;
-
 }
 button:not(.vote-btn):hover{
     filter:brightness(125%);

@@ -70,7 +70,9 @@
               <input type="text" id="registerUsername" name="username" required>
               <label for="registerPassword">Password:</label>
               <input type="password" id="registerPassword" name="password" required>
+              <div class="customization-wrapper" id="registerCustomizationContainer"></div>
               <button class="register-button" type="submit">Register</button>
+              
           </form>
         </div>
       </div>
@@ -221,9 +223,67 @@
   </template>
 
   
-  <template id="edit-cancel-btns">
-    
-  </template>
+<template id="avatar-customization-template">
+    <div class="avatar-customization-container">
+      <div class="avi-choice">
+        <div class="button-container">
+            <input type="radio" id="avi1" name="aviChoice"  value="1" checked>
+              <label for="avi1">
+                <div class="avatar-button">
+                <svg width="75" height="75">
+                    <rect class="background" width="50" height="50" fill="#ff0000"></rect>
+                    <rect class="foreground" x="50" width="50" height="100" fill="#0000ff"></rect>
+                </svg>
+                </div>
+              </label>
+            </input>
+        </div>
+        <div class="button-container">
+            <input type="radio" id="avi2" name="aviChoice" value="2">
+              <label for="avi2">
+                <div class="avatar-button">
+                  <svg width="75" height="75">
+                    <rect class="background" width="50" height="50" fill="#ff0000"></rect>
+                    <rect class="foreground" x="50" width="50" height="100" fill="#0000ff"></rect>
+                </svg>
+                </div>
+              </label>
+            </input>
+        </div>
+        <div class="button-container">
+          <input type="radio" id="avi3" name="aviChoice" value="3">
+            <label for="avi3">
+              <div class="avatar-button">
+                <svg width="75" height="75">
+                  <rect class="background" width="50" height="50" fill="#ff0000"></rect>
+                  <rect class="foreground" x="50" width="50" height="100" fill="#0000ff"></rect>
+              </svg>
+              </div>
+            </label>
+          </input>
+        </div>
+        <div class="button-container">
+          <input type="radio" id="avi4" name="aviChoice" value="4">
+            <label for="avi4">
+              <div class="avatar-button">
+                <svg width="75" height="75">
+                  <rect class="background" width="50" height="50" fill="#ff0000"></rect>
+                  <rect class="foreground" x="50" width="50" height="100" fill="#0000ff"></rect>
+              </svg>
+              </div>
+            </label>
+          </input>
+        </div>
+      </div>
+  
+      <div class="color-picker-container">
+        <input type="color" id="main-color-picker" value="#BABABA">
+        <label for="color1">Main</label>
+        <input type="color" id="background-color-picker" value="#000000">
+        <label for="color2">Background</label>
+      </div>
+    </div>
+</template>
 
   <script type="module" src="./scripts.js"></script>
 

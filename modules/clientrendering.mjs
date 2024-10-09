@@ -41,4 +41,14 @@ const hideLogin = () =>{
     loginModal.classList.add('hidden');
 }
 
-export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground };
+const displayAvatarCustomization = (targetContainer) => {
+    //Creates the avatar from template and places it
+  //Grab the avatar customization template and place it after the target Element
+  //Either place it after the password field, or after the 'Customization modal title'
+  //TODO: do the customization modal
+  const avatarTemplate = document.getElementById('avatar-customization-template');
+  let clonedTemplate = avatarTemplate.content.cloneNode(true);
+  targetContainer.appendChild(clonedTemplate);
+}
+
+export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization};

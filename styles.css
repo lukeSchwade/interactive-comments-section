@@ -440,7 +440,7 @@ button {
 }
 .login-modal-container h2 {
   font-size: 20px;
-  margin-top: 1em;
+  margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
 .login-modal-container label {
@@ -471,6 +471,65 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+}
+
+.avatar-customization-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.avi-choice {
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: 90%;
+  justify-items: center;
+}
+@media (min-width: 767px) {
+  .avi-choice {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.avi-choice input {
+  opacity: 0;
+  height: 0;
+  width: 0;
+  position: absolute;
+}
+.avi-choice .button-container {
+  border-radius: 8px;
+  flex: 1 1 50px;
+  min-width: -moz-fit-content;
+  min-width: fit-content;
+  max-width: -moz-fit-content;
+  max-width: fit-content;
+  cursor: pointer;
+  outline: 1px hsl(223, 19%, 93%) solid;
+  background-color: hsl(228, 33%, 97%);
+  transition: transform 50ms;
+}
+.avi-choice .button-container:has(input:checked) {
+  background-color: hsl(239, 57%, 85%);
+  outline: 1px hsl(239, 57%, 85%) solid;
+  transform: scale(1.05);
+}
+.avi-choice .button-container:hover {
+  background-color: hsl(239, 57%, 85%);
+}
+.avi-choice .button-container:active {
+  outline: 1px hsl(211, 10%, 45%) solid;
+  transform: scale(0.99);
+}
+.avi-choice .avatar-button {
+  display: flex;
+  flex-direction: row;
+  padding: 0.25em;
+  justify-content: center;
+}
+.avi-choice .color-picker-container {
+  display: flex;
+  flex-direction: row;
 }
 
 .background-fade {
