@@ -646,15 +646,15 @@ class AvatarButton {
     //A class for each button which keeps track of all the 
     constructor(targetIcon){
         this.targetIcon = targetIcon;
-        this.svgForeground = targetIcon.querySelector('.foreground');
-        this.svgBackground = targetIcon.querySelector('.background');
+        this.svgFirstColor = targetIcon.querySelector('.first');
+        this.svgSecondColor = targetIcon.querySelector('.second');
 
     }
-    changeForeground (newColor){
-        this.svgForeground.setAttribute('fill', newColor);
+    changeFirst (newColor){
+        this.svgFirstColor.setAttribute('fill', newColor);
     }
-    changeBackground(newColor){
-        this.svgBackground.setAttribute('fill', newColor);
+    changeSecond(newColor){
+        this.svgSecondColor.setAttribute('fill', newColor);
 
     }
 }
@@ -665,30 +665,30 @@ class AvatarCustomizationHandler {
         this.createEventHandlers();
     }
     createEventHandlers(){
-        const mainColorInput = document.getElementById('main-color-picker');
-        const backgroundColorInput = document.getElementById('background-color-picker');
+        const firstColorInput = document.getElementById('first-color-picker');
+        const secondColorInput = document.getElementById('second-color-picker');
         document.querySelectorAll('.avatar-button').forEach((button) => {
             this.Buttons.push(new AvatarButton(button));
         });
-        mainColorInput.addEventListener('input', (evt) => {
+        firstColorInput.addEventListener('input', (evt) => {
             this.changeColors('front', evt.target.value);
         });
-        backgroundColorInput.addEventListener('input', (evt) => {
+        secondColorInput.addEventListener('input', (evt) => {
             this.changeColors('back', evt.target.value);
         });
     }
     changeColors(whichColor, newColor){
         if (whichColor == 'front') {
-            this.Buttons.forEach(icon => icon.changeForeground(newColor));
+            this.Buttons.forEach(icon => icon.changeFirst(newColor));
         } else if (whichColor == 'back') {
-            this.Buttons.forEach(icon => icon.changeBackground(newColor));
+            this.Buttons.forEach(icon => icon.changeSecond(newColor));
             
         }
     }
     refreshColors(){
         //When the modal Opens, get the correct colors
-        const newFront = document.getElementById('main-color-picker').value;
-        const newBack = document.getElementById('background-color-picker').value;
+        const newFront = document.getElementById('first-color-picker').value;
+        const newBack = document.getElementById('second-color-picker').value;
         this.changeColors('front', newFront);
         this.changeColors('back', newBack);
     }
