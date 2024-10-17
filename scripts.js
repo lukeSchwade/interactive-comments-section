@@ -643,7 +643,7 @@ const submitLoginPayload = (username, password) => {
 
 }
 class AvatarButton {
-    //A class for each button which keeps track of all the 
+    //A class for each button on customization page which keeps track of the colors of avis 
     constructor(targetIcon){
         this.targetIcon = targetIcon;
         this.svgFirstColor = targetIcon.querySelector('.first');

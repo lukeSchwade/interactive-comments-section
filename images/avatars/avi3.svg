@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="70.587074mm"
+   height="70.727737mm"
+   viewBox="0 0 70.587074 70.727738"
+   version="1.1"
+   id="svg28337"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="avi3.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview28339"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="1.3932941"
+     inkscape:cx="190.5556"
+     inkscape:cy="242.94942"
+     inkscape:window-width="1850"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g21123"
+     inkscape:snap-bbox="false"
+     inkscape:object-paths="false"
+     inkscape:snap-global="true"
+     inkscape:snap-others="false"
+     inkscape:object-nodes="false"
+     inkscape:snap-nodes="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid8894" />
+  </sodipodi:namedview>
+  <defs
+     id="defs28334" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g21123">
+      <ellipse
+         style="fill:#dde9ef;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583"
+         id="path159-6"
+         cx="35.293537"
+         cy="35.363869"
+         rx="35.293537"
+         ry="35.363869" />
+      <path
+         id="path7365"
+         style="fill:#93a6af;stroke-width:0.236226"
+         d="M 35.749651,5.9953032 23.183429,31.188873 10.617207,56.382433 h 25.132444 25.132442 l -6.174138,-12.37732 a 14.257888,14.292563 0 0 1 -4.242082,0.65345 14.257888,14.292563 0 0 1 -14.258736,-14.29242 14.257888,14.292563 0 0 1 5.916927,-11.59003 z" />
+    </g>
+  </g>
+</svg>

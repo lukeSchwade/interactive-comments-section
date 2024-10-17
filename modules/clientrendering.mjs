@@ -41,14 +41,38 @@ const hideLogin = () =>{
     loginModal.classList.add('hidden');
 }
 
-const displayAvatarCustomization = (targetContainer) => {
-    //Creates the avatar from template and places it
-  //Grab the avatar customization template and place it after the target Element
-  //Either place it after the password field, or after the 'Customization modal title'
-  //TODO: do the customization modal
-  const avatarTemplate = document.getElementById('avatar-customization-template');
-  let clonedTemplate = avatarTemplate.content.cloneNode(true);
-  targetContainer.appendChild(clonedTemplate);
+const whichAvatarPath = (selection) => {
+    //Determines which path the user avatar needs
+    let path;
+
+    switch (selection) {
+        case 1:
+            path;
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4: 
+            break;
+        default:
+            break;
+    }
+    return path;
 }
 
-export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization};
+const displayAvatar = (selection, mainColor, bgColor) => {
+    //Gets the colors and avi selection, and creates an svg element to display on DOM
+}
+
+const displayAvatarCustomization = (targetContainer) => {
+    //Creates the avatar customization widget from template and renders it (either on account creation page or preferences page)
+    //Grab the avatar customization template and place it after the target Element
+    //Either place it after the password field, or after the 'Customization modal title'
+    //TODO: do the customization modal
+    const avatarTemplate = document.getElementById('avatar-customization-template');
+    let clonedTemplate = avatarTemplate.content.cloneNode(true);
+    targetContainer.appendChild(clonedTemplate);
+}
+
+export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatar, displayAvatarCustomization};
