@@ -41,28 +41,51 @@ const hideLogin = () =>{
     loginModal.classList.add('hidden');
 }
 
-const whichAvatarPath = (selection) => {
-    //Determines which path the user avatar needs
-    let path;
 
+const createAvatarShape = (selection) => {
+    //Determines which svg the user avatar needs
+    let path;
+    let newShape;
     switch (selection) {
-        case 1:
-            path;
+        case 1: //circle
+            newShape = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            newShape.setAttribute('cx', 15);
+            newShape.setAttribute('cy', 15);
+            newShape.setAttribute('r', 7);
             break;
-        case 2:
+        case 2: //square
+            newShape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            newShape.setAttribute('x', 9);
+            newShape.setAttribute('y', 9);
+            newShape.setAttribute('width', 12);
+            newShape.setAttribute('height', 12);
+            newShape.setAttribute('rx', 2);
             break;
-        case 3:
+        case 3: //triangle
+            newShape = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            newShape.setAttribute('points', '15, 5 6, 20 24, 20');
+
             break;
-        case 4: 
+        case 4: //oval
+            newShape = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+            newShape.setAttribute('cx', 15);
+            newShape.setAttribute('cy', 15);
+            newShape.setAttribute('rx', 10);
+            newShape.setAttribute('ry', 5);
             break;
         default:
             break;
     }
-    return path;
+    newShape.setAttribute('class', 'first');
+    return newShape;
 }
 
-const displayAvatar = (selection, mainColor, bgColor) => {
-    //Gets the colors and avi selection, and creates an svg element to display on DOM
+const createAvatar = (svgElement, avatarData) => {
+    //Gets the colors and avi selection, and modifies the svg element to display on DOM, appends it to 
+    let avatar = createAvatarShape(avatarData.portrait);
+    avatar.setAttribute('fill', avatarData.firstColor);
+    svgElement.querySelector('.background-circle').setAttribute('fill', avatarData.secondColor);
+    svgElement.appendChild(avatar);
 }
 
 const displayAvatarCustomization = (targetContainer) => {
@@ -75,4 +98,4 @@ const displayAvatarCustomization = (targetContainer) => {
     targetContainer.appendChild(clonedTemplate);
 }
 
-export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatar, displayAvatarCustomization};
+export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, createAvatar, displayAvatarCustomization};

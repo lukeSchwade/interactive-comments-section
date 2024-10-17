@@ -12,10 +12,10 @@ const upvoteHandlers = [];
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
-import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization } from "./modules/clientrendering.mjs";
+import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization, createAvatar } from "./modules/clientrendering.mjs";
 //import { get } from "mongoose";
 class CommentTemplate {
-    //Class for a comment data for purpose of building replies
+    //Class for a comment data for purpose of building user replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
     constructor(content){
         this.id = ++totalComments;
@@ -25,6 +25,7 @@ class CommentTemplate {
         this.username = sessionStorage.getItem('username');
         //CHANGE WHEN USING NEW USERNAME and USER IMAGE SYSTEM
         this.user = {
+            avatar: userData.avatar,
             username: sessionStorage.getItem('username'),
             image: userData.image   
         };
@@ -725,6 +726,8 @@ const buildComment = (currentNode) => {
     clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
     clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
+    const avatar = clonedComment.querySelector('.avatar-svg');
+    createAvatar(avatar, currentNode.user.avatar)
     const timeAgo = clonedComment.querySelector('.time-ago');
     timeAgo.textContent = convertDateToFromNow(currentNode.createdAt);
     timeAgo.setAttribute('title', new Date(currentNode.createdAt));

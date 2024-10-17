@@ -24,8 +24,8 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.3932941"
-     inkscape:cx="54.188131"
-     inkscape:cy="199.16829"
+     inkscape:cx="43.781137"
+     inkscape:cy="72.848941"
      inkscape:window-width="1850"
      inkscape:window-height="1016"
      inkscape:window-x="0"
@@ -37,22 +37,16 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-10.661706,-106.29981)">
-    <g
-       id="g17466"
-       transform="matrix(0.93708139,0,0,0.93521772,-86.176921,9.8277668)">
-      <ellipse
-         style="fill:#dde9ef;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583"
-         id="path159-41"
-         cx="138.63422"
-         cy="138.51851"
-         rx="35.293537"
-         ry="35.363869" />
-    </g>
+     id="layer1">
+    <circle
+       style="fill:#dde9ef;fill-opacity:1;fill-rule:evenodd;stroke-width:0.247689"
+       id="path159-41"
+       cx="33.12112"
+       cy="33.146481"
+       r="33.072918" />
     <path
        id="rect846"
        style="fill:#93a6af;stroke-width:0.13646"
-       d="m 40.311759,126.14357 v 9.78621 h -9.806302 v 6.4664 h 9.806302 v 10.20572 h 6.466462 V 142.39618 H 56.96379 v -6.4664 H 46.778221 v -9.78621 z" />
+       d="m 29.839198,17.229826 v 9.78621 h -9.806302 v 6.4664 h 9.806302 v 10.20572 h 6.466462 v -10.20572 h 10.185569 v -6.4664 H 36.30566 v -9.78621 z" />
   </g>
 </svg>
