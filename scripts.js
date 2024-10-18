@@ -12,7 +12,7 @@ const upvoteHandlers = [];
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
-import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization, createAvatar } from "./modules/clientrendering.mjs";
+import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization, createAvatar, clearComments } from "./modules/clientrendering.mjs";
 //import { get } from "mongoose";
 class CommentTemplate {
     //Class for a comment data for purpose of building user replies
@@ -1018,10 +1018,26 @@ class ClientHandler {
     }
 }
 
+class UserHandler {
+    constructor(){
+        this.sortMethod = 1; //1,2, or 3
+        this.isLoggedIn = false;
+        this.checkData();
+    }
+    checkData(){
+        //Check if user is logged in
+    }
+    loginChanged(){
+        //Change all the things that need to be changed when logged in
+        //eg profile picture
+    }
+}
+let user = new UserHandler();
 
 const FetchComments = (sortBy) =>{
     //Fetch Comments
 }
+
 const initializeComments = async() => {
     //Fetches from Server, if that fails populates from test data
     const serverURL = `http://localhost:30550`;//CHANGE THIS to DIFFERENT ADDRESS LATER
@@ -1033,7 +1049,7 @@ const initializeComments = async() => {
         // return the data
         .then(data => data)
         .catch(err => {
-            throw new Error("Error contacting server")
+            throw new Error("Error contacting server: " + err)
         });
     }
     const defaultFetchCommentData = async () => {

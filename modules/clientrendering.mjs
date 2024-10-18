@@ -98,4 +98,7 @@ const displayAvatarCustomization = (targetContainer) => {
     targetContainer.appendChild(clonedTemplate);
 }
 
-export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, createAvatar, displayAvatarCustomization};
+const clearComments = () => {
+  //Clear all the comments from DOM for another refresh
+}
+export { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, createAvatar, displayAvatarCustomization, clearComments};
