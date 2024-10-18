@@ -571,48 +571,74 @@ class LoginHandler {
         
     }
     async submitLogin(event){
-        //await for serverpayload
-        //If it's an error, explain why
-        event.preventDefault();
+        if (event) event.preventDefault();
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        const serverUrl = `https:localHost:5500` //CHANGE ME
-        const response = await fetch (`${serverUrl}/login`, {
+        const serverUrl = `http://localHost:3000` //CHANGE ME
+        const response = await fetch (`${serverUrl}/api/users/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.status == 200) {
+                // Handle successful login (e.g., redirect or show a message)
+                console.log('Login successful: ', data);
+                loginHandler.closeModal();
+            } else {
+                
+            }
+        })
+        .catch((error) => {
+            console.error('Error during login:', error);
         });
-        const data = await response.json();
-        console.log(data); // Handle the response from the server
     }
     async submitRegister(event){
+        console.log("register button clicked");
         //Await server response
         //If registration is successful, submit a login request as well
         event.preventDefault(); // Prevent the default form submission
         const username = document.getElementById('registerUsername').value;
         const password = document.getElementById('registerPassword').value;
-        const serverUrl = `https:localHost:5500` //CHANGE ME
-
-        const response = await fetch(`${serverUrl}/register`, {
+        const serverUrl = `http://localHost:3000` //CHANGE ME
+        const avatar = {
+            portrait: document.querySelector('input[name="aviChoice"]:checked').value,
+            firstColor: document.getElementById('first-color-picker').value,
+            secondColor: document.getElementById('second-color-picker').value
+        }
+        const response = await fetch(`${serverUrl}/api/users/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, avatar })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status == 200){
+                // Handle successful registration (e.g., redirect or show a message)
+                console.log('Registration successful:', data);
+
+                //Start a login
+                document.getElementById('loginUsername').value = username;
+                document.getElementById('loginPassword').value = password;
+                //this.submitLogin(event);
+
+            } else {
+                console.log('error');
+                showError(`Error ${data.status}: ${data.message}`);
+            }
+
+        })
+        .catch((error) => {
+            console.error('Error during registration:', error);
+            
         });
-    
-        const data = await response.json();
-        console.log(data); // Handle the response from the server
-        
-        if (data) {
-            //If response is error code, explain why
-        } else if (data){
-            //if it succeeds, submit a login attempt as well.
-            this.submitLogin(event);
-            this.closeModal();
-        }   
+            
     }
     handleGlobalClick(evt){
         //If the click did not happen inside the Modal, close the modal
@@ -664,6 +690,7 @@ class AvatarCustomizationHandler {
         this.container = document.querySelector('avatar-customization-container');
         this.Buttons = []
         this.createEventHandlers();
+
     }
     createEventHandlers(){
         const firstColorInput = document.getElementById('first-color-picker');
@@ -991,15 +1018,16 @@ class ClientHandler {
     }
 }
 
+
 const FetchComments = (sortBy) =>{
     //Fetch Comments
 }
 const initializeComments = async() => {
     //Fetches from Server, if that fails populates from test data
-    const serverURL = `http://localhost:3000/comments/get/1-15/`;//CHANGE THIS to DIFFERENT ADDRESS LATER
+    const serverURL = `http://localhost:30550`;//CHANGE THIS to DIFFERENT ADDRESS LATER
     const defaultURL = './data.json';
     const fetchCommentData = async () => {
-        return fetch(serverURL)
+        return fetch(`${serverURL}/api/comments/get`)
         // JSONify the response
         .then(res => res.json())
         // return the data
@@ -1009,6 +1037,7 @@ const initializeComments = async() => {
         });
     }
     const defaultFetchCommentData = async () => {
+        //fetch locally stored placeholder comments
         return fetch(defaultURL)
         // JSONify the response
         .then(res => res.json())
