@@ -11,7 +11,7 @@ const upvoteHandlers = [];
 //clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
 //IMPORTS GO HERE
-import { isCurrentUser, isAdmin } from "./modules/helpers.mjs";
+import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from "./modules/helpers.mjs";
 import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization, createAvatar, clearComments } from "./modules/clientrendering.mjs";
 //import { get } from "mongoose";
 class CommentTemplate {
@@ -956,37 +956,7 @@ const buildReplyCard = () => {
     return clonedCard;
 }
 
-const convertDateToFromNow = (date) => {
-    //Convert Time to how long ago from now
-    let returnedDate = '0 seconds ago';
-    const commentDate = new Date(date);
-    const currentDate = new Date();
-    const timeDifference = currentDate.getTime() - commentDate.getTime();
-    returnedDate = msToTime(timeDifference);
-    return returnedDate;
-}
 
-const msToTime = (ms) => {
-    let seconds = Math.floor(ms / 1000);
-    let minutes = Math.floor(ms / (1000 * 60));
-    let hours = Math.floor((ms / (1000 * 60 * 60)));
-    let days = Math.floor((ms / (1000 * 60 * 60 * 24)));
-    let months = Math.floor((ms / (1000 * 60 * 60 * 24 * 30)))
-    let years = Math.floor((ms / (1000 * 60 * 60 * 24 * 365)));
-    let result;
-    if (seconds < 60) result = `${seconds} ${toPlural(seconds, "second")}`;
-    else if (minutes < 60) result = `${minutes} ${toPlural(minutes, "minute")}`;
-    else if (hours < 24) result = `${hours} ${toPlural(hours, "hour")}`;
-    else if (days < 30) result = `${days} ${toPlural(days, "day")}`;
-    else if (months < 12) result = `${months} ${toPlural(months, "month")}`;
-    else result = `${years} ${toPlural(years, "year")}`
-    return result + " ago";
-}
-
-const toPlural = (qty, word) => {
-    //Add s to word if it's plural
-    return `${word}${qty === 1 ? "" : "s"}`
-}
 
 //TODO
 
@@ -1001,28 +971,18 @@ const toPlural = (qty, word) => {
 
 //Fetches a batch of comments from server and builds them on the DOM
 //Object that handles interaction w the server
-class ClientHandler {
-    //Possibly unused framework for handling comments and keeping all the handlers together
-    constructor(){
-        this.totalComments = 0;
-        //Nums to determine where the fetch starts and ends 
-        this.fetchStart = 0;
-        this.FetchEnd = 0;
-    }
-    initialFetchComments(){
-        //initial fetch of comments with default sort method
-    }
-    fetchComments(){
-        //Grab the sort method
-        //Fetch the 
-    }
-}
-
 class UserHandler {
+    //CURENTLY UNUSED
+    //Object for organizing all the handlers into one spot
     constructor(){
         this.sortMethod = 1; //1,2, or 3
         this.isLoggedIn = false;
         this.checkData();
+        //List of handlers
+        this.loginHandler;
+        this.replyHandler;
+        this.sortHandler;
+
     }
     checkData(){
         //Check if user is logged in
