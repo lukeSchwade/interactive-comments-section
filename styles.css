@@ -206,7 +206,7 @@ button {
   cursor: pointer;
 }
 
-.reply-btn, .vote-container {
+.reply-btn, .vote-container, .cancel-reply__btn {
   color: hsl(238, 40%, 52%);
   font-weight: 500;
 }
@@ -293,6 +293,16 @@ button {
     height: 100%;
   }
 }
+.add-comment-container .submit-reply-button-container {
+  display: flex;
+  flex-direction: column;
+  grid-area: 2/3/3/4;
+}
+@media (min-width: 767px) {
+  .add-comment-container .submit-reply-button-container {
+    flex: 0 1 auto;
+  }
+}
 .add-comment-container .add-comment__btn {
   grid-area: 2/3/3/4;
   color: hsl(0, 0%, 100%);
@@ -307,6 +317,9 @@ button {
   .add-comment-container .add-comment__btn {
     flex: 0 1 auto;
   }
+}
+.add-comment-container .cancel-reply__btn {
+  margin: 0.5em auto 0em;
 }
 
 .edit-comment__btn {

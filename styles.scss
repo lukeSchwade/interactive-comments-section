@@ -260,7 +260,7 @@ button {
     cursor: pointer;
 }
 
-.reply-btn, .vote-container {
+.reply-btn, .vote-container, .cancel-reply__btn {
     color: $moderate-blue;
     font-weight: 500;
 }
@@ -337,6 +337,13 @@ button {
             height: 100%;
         }
     }
+    .submit-reply-button-container{
+        @include flex-container(column);
+        grid-area: 2 / 3 / 3 / 4;
+        @include media('small'){
+            flex: 0 1 auto;
+        }
+    }
     .add-comment__btn {
         grid-area: 2 / 3 / 3 / 4;
         @include roundButton($white, $moderate-blue);
@@ -348,7 +355,9 @@ button {
             flex: 0 1 auto;
         }
     }
-
+    .cancel-reply__btn {
+        margin: 0.5em auto 0em;
+    }
     
 }
 
