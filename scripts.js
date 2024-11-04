@@ -1002,6 +1002,7 @@ const initializeComments = async() => {
     //Fetches from Server, if that fails populates from test data
     const serverURL = `http://localhost:30550`;//CHANGE THIS to DIFFERENT ADDRESS LATER
     const defaultURL = './data.json';
+    let isProd = false; //flag for if in development env
     const fetchCommentData = async () => {
         return fetch(`${serverURL}/api/comments/get`)
         // JSONify the response
@@ -1026,8 +1027,10 @@ const initializeComments = async() => {
         let result;
         try {
             result = await fetchCommentData();
+            isProd = true;
         } catch (error) {
             //Default function to fetch local data if server is unavailable
+            isProd = false;
             result = await defaultFetchCommentData();
         } finally {
             return result;
@@ -1036,14 +1039,28 @@ const initializeComments = async() => {
     // TODO split currentUser and comments into separate files and change this logic
     const dataResult = await fetchCommentWrapper();
     //Split the recieved data into related fragments
-    userData = dataResult.currentUser;
-    totalComments = dataResult.totalComments;
-    currentUser = dataResult.currentUser; //Will Change this when I have new system 
-    sessionStorage.setItem("username", userData.username);
-    const commentData = dataResult.comments;
+    let commentData;
+    if (isProd) {
+        //Organize the data base on server response
+    } else {
+        //Otherwise work off Default Data
+        userData = dataResult.currentUser;
+        totalComments = dataResult.totalComments;
+        currentUser = dataResult.currentUser; //Will Change this when I have new system 
+        sessionStorage.setItem("username", userData.username);
+        commentData = dataResult.comments;
+
+    }
+
+    //userData = dataResult.currentUser;
+    // totalComments = dataResult.totalComments;
+    // currentUser = dataResult.currentUser; //Will Change this when I have new system 
+    //sessionStorage.setItem("username", userData.username);
+    //const commentData = dataResult.comments;
+    
     //Create seperate generalTree obj for each comment tree
     const treeArrays = [];
-    //Store each comment tree in treeArrays and 
+    //Store each comment tree as an entry in treeArrays
     commentData.forEach( (el, index) => {
         treeArrays.push(new GeneralTree());
         treeArrays[index].root = commentData[index];
