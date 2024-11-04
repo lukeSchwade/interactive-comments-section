@@ -124,10 +124,10 @@ const deleteComment = (currentComment) => {
     currentComment.querySelector('.comment-content').textContent = "This Comment has been deleted";
     currentComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
     currentComment.querySelector('.username').textContent = 'Deleted';
-    cleanupDeletedComment(currentComment);
+    cleanUpDeletedComment(currentComment);
 }
 
-const cleanupDeletedComment = (targetComment) => {
+const cleanUpDeletedComment = (targetComment) => {
     //Delete the buttons and disable the upvotes
     //Clone element to remove all the eventlisteners
     const newElement = targetComment.cloneNode(true);
@@ -161,7 +161,7 @@ const submitReply = (evt) => {
     const newComment = buildComment(newNode, true);
     new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true);
     parentWrapper.insertBefore(newComment, replyWindow);
-
+    //Delete the reply Window
     replyWindow.remove();
 }
 
@@ -185,7 +185,7 @@ const submitParentComment = () => {
 const commentNodeList = [];
 
 const commentButtonHandler = (evt, username) => {
-    //Determines which button was clicked
+    //Determines which button on the comment was clicked
     //Global Click for closing edit window
     if (editHandler && editHandler.isOpen && !editHandler.targetComment.contains(evt.srcElement)) editHandler.closeEditWindow(); 
 
@@ -221,7 +221,6 @@ class CommentNode {
         this.linkedCommentEl = linkedCommentEl;
         this.username = username;
         this.upvoteHandler = null;
-        this.replyHandler = null;
         this.serverRequestHandler = null;
         this.init(isSubmitted);
         this.clickListener = this.linkedCommentEl.addEventListener('click', (evt) => this.onClick(evt)); 
@@ -231,45 +230,56 @@ class CommentNode {
         //Create all the handlers
         this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
         if (isSubmitted) this.upvoteHandler.selfUpvote();
-        //this.replyHandler =  new ReplyHandler(this.linkedCommentEl, this.id);
     }
     onClick(evt){
         //Determine which button was clicked then determine which handler to pass it to
         const whichBtn = commentButtonHandler(evt, this.username);
-        switch (whichBtn) {
-            case 'vote':
-                this.upvoteHandler.onClick(evt);
-                //Send event to upvote Handler
-                //Create Buffer object for server Update
-                break;
-            case 'reply':
-                this.createReplyHandler();
-                break;
-            case 'edit':
-                this.createEditHandler();
-                break;
-            case 'submitEdit': 
-                editHandler.onclickSubmit()
-                break;
-            case 'delete':
-                this.createDeleteHandler();
-                break;
-            default:
-                break;
+        //All these buttons require you to be logged in, so check for login first
+        if (user.isLoggedIn) {
+            switch (whichBtn) {
+                case 'vote':
+                    this.upvoteHandler.onClick(evt);
+                    //Send event to upvote Handler
+                    //Create Buffer object for server Update
+                    break;
+                case 'reply':
+                    this.createReplyHandler();
+                    break;
+                case 'edit':
+                    this.createEditHandler();
+                    break;
+                case 'submitEdit': 
+                    editHandler.onclickSubmit()
+                    break;
+                case 'delete':
+                    this.createDeleteHandler();
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            //Prompt to login instead
+            evt.stopImmediatePropagation();
+            console.log("not logged in");
+
+            if (!user.loginHandler.isOpen){
+                user.openLoginModal();
+            }
         }
+
     }
     createUpvoteHandler(){
         //Create an Upvote handler and attach it to this node
     }
     createReplyHandler(){
         //If there isn't already a replyhandler, initialize it
-        if (!replyHandler) {
-            replyHandler = new ReplyHandler(this.id, this.linkedCommentEl);
+        if (!user.replyHandler) {
+            user.replyHandler = new ReplyHandler(this.id, this.linkedCommentEl);
         } else {
             //Otherwise update it with new object info
-            replyHandler.updateParentObjectData(this.id, this.linkedCommentEl);
+            user.replyHandler.updateParentObjectData(this.id, this.linkedCommentEl);
         }
-        replyHandler.repositionReplyCard(this.linkedCommentEl);
+        user.replyHandler.repositionReplyCard(this.linkedCommentEl);
     }
     createEditHandler(){
         //Create handler if it doesn't exist otherwise update it.
@@ -389,8 +399,6 @@ class UpvoteHandler {
     }
 }
 
-//The Single Reply Handler
-let replyHandler;
 class ReplyHandler {
     //Single reply handler object that is loosely attached to the corresponding parent comment via parentID and linked element
     constructor(parentId, parentComment) {
@@ -400,6 +408,7 @@ class ReplyHandler {
         this.id = null;
         this.replyCard = null;
         this.submitReplyButton = null;
+        this.cancelReplyButton = null;
         this.init(parentComment);
 
     }
@@ -412,15 +421,18 @@ class ReplyHandler {
         createReplyWindow (parentComment);
         this.replyCard = document.getElementById('reply-card-inline');
         this.submitReplyButton = this.replyCard.querySelector('.add-comment__btn');
+        this.cancelReplyButton = this.replyCard.querySelector('.cancel-reply__btn');
         this.detachListener();
         this.attachListener();
     }
     attachListener(){
         this.submitReplyButton.addEventListener('click', this.onClickReply, {capture: true});
+        this.cancelReplyButton.addEventListener('click', this.onClickCancel,{capture: true});
 
     }
     detachListener(){
         this.submitReplyButton.removeEventListener('click', this.onClickReply, {capture: true});
+        this.cancelReplyButton.removeEventListener('click', this.onClickCancel,{capture:true});
 
     }
     updateParentObjectData(parentId, parentComment){
@@ -443,6 +455,10 @@ class ReplyHandler {
             new AddCommentPayload(this.id, this.parentId, 'admin000', textArea.value)
         }
         //payload: Parent comment ID, current user ID, current comment ID (resolve serverside), content of comment
+    }
+    onClickCancel = (evt) => {
+        //Cancel the reply and close window
+        this.replyCard.remove();
     }
 
 }
@@ -557,7 +573,7 @@ class DeleteHandler {
 
 }
 
-let loginHandler;
+//let loginHandler;
 class LoginHandler {
     constructor(){
         this.isOpen = false;
@@ -588,7 +604,7 @@ class LoginHandler {
             if (data.status == 200) {
                 // Handle successful login (e.g., redirect or show a message)
                 console.log('Login successful: ', data);
-                loginHandler.closeModal();
+                user.loginHandler.closeModal();
             } else {
                 
             }
@@ -642,8 +658,8 @@ class LoginHandler {
     }
     handleGlobalClick(evt){
         //If the click did not happen inside the Modal, close the modal
-        if (loginHandler.isOpen && !evt.target.closest('.login-modal')){
-            loginHandler.closeModal(); 
+        if (user.loginHandler.isOpen && !evt.target.closest('.login-modal')){
+            user.loginHandler.closeModal(); 
             //'this' refers to the event, so need to use loginHandler
         }
     }
@@ -665,10 +681,50 @@ class LoginHandler {
     }
 }
 
-loginHandler = new LoginHandler();
-const submitLoginPayload = (username, password) => {
+//loginHandler = new LoginHandler();
 
+class SortHandler {
+    constructor() {
+        this.dropdownElement = document.getElementById('sort-dropdown');
+        this.sortMethod = 'new'; //Default
+        this.dropdownElement.addEventListener("change", (evt) => this.changeSelection(evt));
+    }
+
+    changeSelection(evt){
+        const selection = evt.target.value;
+        console.log('Sort by: ' + selection);
+        user.sortMethod = selection;
+
+        //Server request goes here
+    }
 }
+class UserHandler {
+    //Object for organizing all the handlers into one spot
+    constructor(){
+        this.sortMethod = 'new'; //top, new or old
+        this.isLoggedIn = false;
+        this.totalComments = 0; //Tally of total comments for purpose of keeping track of totals
+        this.checkData();
+        //List of handlers
+        this.loginHandler = new LoginHandler();
+        this.replyHandler;
+        this.sortHandler = new SortHandler();
+
+    }
+    checkData(){
+        //Check if user is logged in
+    }
+    openLoginModal(){
+        this.loginHandler.openModal();
+        //Open  login modal if isLoggedIn has failed or for other reasons (server failure eg)
+    }
+    loginChanged(){
+        //Change all the things that need to be changed when logged in or out
+        //eg profile picture, toggle visibility of login buttons, etc.
+    }
+}
+let user = new UserHandler();
+
 class AvatarButton {
     //A class for each button on customization page which keeps track of the colors of avis 
     constructor(targetIcon){
@@ -783,20 +839,7 @@ const filterCommentPayload = (instance) => {
     return finalPayload;
 }   
 
-class SortHandler {
-    constructor() {
-        this.dropdownElement = document.getElementById('sort-dropdown');
-        this.sortMethod = 'new'; //Default
-        this.dropdownElement.addEventListener("change", (evt) => this.changeSelection(evt));
-    }
 
-    changeSelection(evt){
-        const selection = evt.target.value;
-        console.log('Sort by: ' + selection);
-        //Server request goes here
-    }
-}
-const sortHandler = new SortHandler();
 
 const sendServerCommentPayload = (payload) => {
     //Default is get
@@ -971,28 +1014,6 @@ const buildReplyCard = () => {
 
 //Fetches a batch of comments from server and builds them on the DOM
 //Object that handles interaction w the server
-class UserHandler {
-    //CURENTLY UNUSED
-    //Object for organizing all the handlers into one spot
-    constructor(){
-        this.sortMethod = 1; //1,2, or 3
-        this.isLoggedIn = false;
-        this.checkData();
-        //List of handlers
-        this.loginHandler;
-        this.replyHandler;
-        this.sortHandler;
-
-    }
-    checkData(){
-        //Check if user is logged in
-    }
-    loginChanged(){
-        //Change all the things that need to be changed when logged in
-        //eg profile picture
-    }
-}
-let user = new UserHandler();
 
 const FetchComments = (sortBy) =>{
     //Fetch Comments
@@ -1041,9 +1062,16 @@ const initializeComments = async() => {
     //Split the recieved data into related fragments
     let commentData;
     if (isProd) {
-        //Organize the data base on server response
+        commentData = dataResult;
+        if (user.isLoggedIn){
+            //Fill user data with correct data
+        } else {
+            //Otherwise use default
+        }
+
     } else {
         //Otherwise work off Default Data
+        user.isLoggedIn = true; //FIX THIS LATER
         userData = dataResult.currentUser;
         totalComments = dataResult.totalComments;
         currentUser = dataResult.currentUser; //Will Change this when I have new system 
@@ -1097,8 +1125,8 @@ const bugTest = () => {
 const bugTestLogin = (event) => {
     event.stopImmediatePropagation();
 
-    if (!loginHandler.isOpen){
-        loginHandler.openModal();
+    if (!user.loginHandler.isOpen){
+        user.loginHandler.openModal();
     }
 }
 
