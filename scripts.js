@@ -686,16 +686,13 @@ class LoginHandler {
 class SortHandler {
     constructor() {
         this.dropdownElement = document.getElementById('sort-dropdown');
-        this.sortMethod = 'new'; //Default
         this.dropdownElement.addEventListener("change", (evt) => this.changeSelection(evt));
     }
 
     changeSelection(evt){
-        const selection = evt.target.value;
-        console.log('Sort by: ' + selection);
-        user.sortMethod = selection;
-
-        //Server request goes here
+        user.sortMethod = evt.target.value;
+        console.log('user sort By: ' + user.sortMethod);
+        //Server request fetch goes here
     }
 }
 class UserHandler {
@@ -1025,7 +1022,7 @@ const initializeComments = async() => {
     const defaultURL = './data.json';
     let isProd = false; //flag for if in development env
     const fetchCommentData = async () => {
-        return fetch(`${serverURL}/api/comments/get`)
+        return fetch(`${serverURL}/api/comments/get/${user.sortMethod}`)
         // JSONify the response
         .then(res => res.json())
         // return the data
