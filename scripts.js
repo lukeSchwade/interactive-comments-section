@@ -1,6 +1,7 @@
 
 //Replies are appended after 'child-comment-gridblock'
-
+let isProd = false; //flag for if testing server in development env
+let isOnline = true; //Flag for if server was successfully contacted
 //global variable to keep track of where to append new comments, which comment to delete, etc.
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
@@ -13,7 +14,10 @@ let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from "./modules/helpers.mjs";
 import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization, createAvatar, clearComments } from "./modules/clientrendering.mjs";
-//import { get } from "mongoose";
+//Function for sending API requests
+import apiRequest, {handleErrors} from './apiRequest.js';
+const serverURL = `http://localhost:3000`;//CHANGE THIS to DIFFERENT ADDRESS LATER
+const defaultURL = './data.json';
 class CommentTemplate {
     //Class for a comment data for purpose of building user replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -445,14 +449,28 @@ class ReplyHandler {
         const textArea = evt.target.closest('.inline-reply-container').querySelector('.submit-comment__input');
 
         //Check for blanks, innuendos, etc
-        if (textArea.value) {            
-            //Build the HTML node of Comment
-            submitReply(evt);
-            //Update the ID before sending server request
-            this.id = totalComments;
-            //Create a server payload object
-            //FIXME: Correct the user id  when finished
-            new AddCommentPayload(this.id, this.parentId, 'admin000', textArea.value)
+        if (textArea.value) {     
+            if (isOnline) {
+                //Message Server
+                let data = JSON.stringify({
+                    parentId: this.parentId,
+                    content: textArea.value
+                });
+                apiRequest(serverURL + '/api/comments/add', 'POST', data).then(handleErrors)
+                .then(result => {
+                    if (result.status === 500) {
+                        return;
+                    }
+                    submitReply(evt);
+                });
+            } else {
+                //Build the HTML node of Comment
+                submitReply(evt);
+               //Update the ID before sending server request
+                this.id = totalComments;
+                new AddCommentPayload(this.id, this.parentId, textArea.value);
+            }
+
         }
         //payload: Parent comment ID, current user ID, current comment ID (resolve serverside), content of comment
     }
@@ -590,8 +608,7 @@ class LoginHandler {
         if (event) event.preventDefault();
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        const serverUrl = `http://localHost:3000` //CHANGE ME
-        const response = await fetch (`${serverUrl}/api/users/login`, {
+        const response = await fetch (`${serverURL}/api/users/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -825,7 +842,7 @@ const buildComment = (currentNode) => {
 
 const filterCommentPayload = (instance) => {
     //Filters out any unnecessary keys from the instance 
-    const allowedKeys = ['commentId', 'parentId', 'userId', 'content', 'payloadType', 'stateChange', 'increment']
+    const allowedKeys = ['commentId', 'parentId', 'content', 'stateChange', 'increment']
     const finalPayload = {};
     Object.keys(instance).forEach(key => {
         if (allowedKeys.includes(key)) {
@@ -882,15 +899,16 @@ class ServerPayload {
 
 
 class AddCommentPayload extends ServerPayload {
-    constructor(id, parentId, userId, content){
+    constructor(id, parentId, content){
         //Contents: id, parent ID, userID, content, and type
         super(id);
         this.parentId = parentId;
-        this.userId = userId;
+        //this.userId = userId; //unnecessary
         this.content = content;
-        this.payloadType = "addComment";
+        //this.payloadType = "addComment";
         this.messageServer();
     }
+
 }
 class DeleteCommentPayload extends ServerPayload {
     constructor (id, userId){
@@ -1018,9 +1036,7 @@ const FetchComments = (sortBy) =>{
 
 const initializeComments = async() => {
     //Fetches from Server, if that fails populates from test data
-    const serverURL = `http://localhost:30550`;//CHANGE THIS to DIFFERENT ADDRESS LATER
-    const defaultURL = './data.json';
-    let isProd = false; //flag for if in development env
+    
     const fetchCommentData = async () => {
         return fetch(`${serverURL}/api/comments/get/${user.sortMethod}`)
         // JSONify the response
@@ -1028,6 +1044,8 @@ const initializeComments = async() => {
         // return the data
         .then(data => data)
         .catch(err => {
+            console.log("error:" + error);
+
             throw new Error("Error contacting server: " + err)
         });
     }
@@ -1046,9 +1064,11 @@ const initializeComments = async() => {
         try {
             result = await fetchCommentData();
             isProd = true;
+            isOnline = true;
         } catch (error) {
             //Default function to fetch local data if server is unavailable
             isProd = false;
+            isOnline = false;
             result = await defaultFetchCommentData();
         } finally {
             return result;
@@ -1058,8 +1078,8 @@ const initializeComments = async() => {
     const dataResult = await fetchCommentWrapper();
     //Split the recieved data into related fragments
     let commentData;
-    if (isProd) {
-        commentData = dataResult;
+    if (isOnline) {
+        commentData = dataResult.commentTree;
         if (user.isLoggedIn){
             //Fill user data with correct data
         } else {
@@ -1086,6 +1106,11 @@ const initializeComments = async() => {
     //Create seperate generalTree obj for each comment tree
     const treeArrays = [];
     //Store each comment tree as an entry in treeArrays
+    if (isOnline) {
+        
+    } else {
+        
+    }
     commentData.forEach( (el, index) => {
         treeArrays.push(new GeneralTree());
         treeArrays[index].root = commentData[index];
@@ -1104,9 +1129,28 @@ const initializeComments = async() => {
         const textArea = document.getElementById('add-comment-textarea');
         if (textArea.value) {
             const content = textArea.value;
-            submitParentComment();
+            if (isOnline) {
+                //Message Server
+                let data = JSON.stringify({
+                    parentId: null,
+                    content: textArea.value
+                });
+                apiRequest(serverURL + '/api/comments/add', 'POST', data).then(handleErrors)
+                .then(result => {
+                    if (result.status === 500) {
+                        return;
+                    }
+                    submitParentComment();
+                });
+            } else {
+                //Build the HTML node of Comment
+                submitParentComment();
+                //Update the ID before sending server request
+                //this.id = totalComments;
+                new AddCommentPayload (totalComments, null, content);
+            }
             //FIXME: Correct the actual user ID when it's done
-            new AddCommentPayload (totalComments, 0, 'admin000', content);
+            //Message Server
         } 
 
     });
