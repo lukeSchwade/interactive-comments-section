@@ -148,8 +148,6 @@ const submitParentComment = () => {
     //SEND SERVER UPDATE HERE
 }
 
-const commentNodeList = [];
-
 const commentButtonHandler = (evt, username) => {
     //Determines which button on the comment was clicked
     //Global Click for closing edit window
@@ -786,9 +784,9 @@ const buildComment = (currentNode) => {
     clonedComment.querySelector('.comment-content').textContent = currentNode.content;
     clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
-    clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
+    //clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
     const avatar = clonedComment.querySelector('.avatar-svg');
-    avi.create(avatar, currentNode.user.avatar)
+    avi.create(avatar, currentNode.user.avatar);
     const timeAgo = clonedComment.querySelector('.time-ago');
     timeAgo.textContent = convertDateToFromNow(currentNode.createdAt);
     timeAgo.setAttribute('title', new Date(currentNode.createdAt));
@@ -797,7 +795,7 @@ const buildComment = (currentNode) => {
     //Add Deleted CSS flag to comment if it's deleted
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
         commentContainer.classList.add('deleted-comment');
-        clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
+        //clonedComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
         clonedComment.querySelector('.reply-btn').remove();
     } 
     return clonedComment;
@@ -973,7 +971,16 @@ const createReplyWindow = (parentComment) => {
 const buildReplyCard = () => {
     const replyCardTemplate = document.getElementById('reply-card-template');
     const clonedCard = replyCardTemplate.content.cloneNode(true);
-    clonedCard.querySelector('.user-avatar').src = `${currentUser.image.png}`;
+    if (currentUser) {
+        //if theres a current user update the user
+        const avatar = clonedCard.querySelector('.avatar-svg');
+        avi.create(avatar, currentUser.avatar);
+        //TODO: Change this to the user from server
+
+    } else {
+        const avatar = clonedCard.querySelector('.avatar-svg');
+        avi.create(avatar, currentUser.avatar);
+        }
     const submitReplyBtn = clonedCard.querySelector('.add-comment__btn');
     return clonedCard;
 }
