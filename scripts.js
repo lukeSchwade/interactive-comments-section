@@ -13,7 +13,7 @@ const upvoteHandlers = [];
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from "./modules/helpers.mjs";
-import { showError, hideError, showLogin, hideLogin, fadeBackground, unfadeBackground, displayAvatarCustomization, createAvatar, clearComments } from "./modules/clientrendering.mjs";
+import { error, loginModal, background, avi, comment, editWindow, commentSection } from "./modules/clientrendering.mjs";
 //Function for sending API requests
 import apiRequest, {handleErrors} from './apiRequest.js';
 const serverURL = `http://localhost:3000`;//CHANGE THIS to DIFFERENT ADDRESS LATER
@@ -108,44 +108,6 @@ class GeneralTree {
 }
 
 
-const toggleEditVisibility = (targetComment, visible) => {
-    targetComment.querySelector('.delete-btn').classList.toggle('hidden');
-    targetComment.querySelector('.reply-btn').classList.toggle('hidden');
-    const commentContent = targetComment.querySelector('.text-container');
-    const editContent = targetComment.querySelector('.edit-container');
-    commentContent.classList.toggle('hidden');
-    editContent.classList.toggle('hidden');
-}
-const submitEdit = (targetComment) => {
-    const oldComment = targetComment.querySelector('.comment-content');
-    const editedText = targetComment.querySelector('.edit-comment-input').value;
-    oldComment.textContent = editedText;
-}
-
-const deleteComment = (currentComment) => {
-    //Client Side deletion of Node
-    currentComment.classList.add('deleted-comment');
-    currentComment.querySelector('.comment-content').textContent = "This Comment has been deleted";
-    currentComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
-    currentComment.querySelector('.username').textContent = 'Deleted';
-    cleanUpDeletedComment(currentComment);
-}
-
-const cleanUpDeletedComment = (targetComment) => {
-    //Delete the buttons and disable the upvotes
-    //Clone element to remove all the eventlisteners
-    const newElement = targetComment.cloneNode(true);
-    try { 
-        try {
-            newElement.querySelector('.you-flag').remove();
-        } catch {
-        }
-        newElement.querySelector('.reply-btn').remove();
-        newElement.querySelector('.delete-btn').remove();
-    } finally {
-        targetComment.replaceWith(newElement);
-    }
-}
 
 const moveReplyCard = (targetNode) => {
     // if the currentCommentfocus is the comment section moves replycard to top of comments
@@ -450,12 +412,14 @@ class ReplyHandler {
 
         //Check for blanks, innuendos, etc
         if (textArea.value) {     
+            //Different routes for if Website is online or not
             if (isOnline) {
                 //Message Server
                 let data = JSON.stringify({
                     parentId: this.parentId,
                     content: textArea.value
                 });
+                //send add comment request to server
                 apiRequest(serverURL + '/api/comments/add', 'POST', data).then(handleErrors)
                 .then(result => {
                     if (result.status === 500) {
@@ -505,7 +469,7 @@ class EditHandler {
        const textArea = this.targetComment.querySelector('.edit-comment-input');
        if (textArea.value){
         const newContent = textArea.value;
-        submitEdit(this.targetComment);
+        editWindow.update(this.targetComment);
         //SEND SERVER UPDATE HERE
         //FIXME: fix user id
         new EditPayload(this.id, 'admin000', newContent)
@@ -521,14 +485,14 @@ class EditHandler {
             //unhide Edit window
             const editContent = this.targetComment.querySelector('.edit-container');
             editContent.querySelector('.edit-comment-input').value = this.content;
-            toggleEditVisibility(this.targetComment);
+            editWindow.toggle(this.targetComment);
             this.targetComment.querySelector('.edit-comment-input').focus();
         }
 
     }
     closeEditWindow() {
         if (this.isOpen){
-            toggleEditVisibility(this.targetComment);
+            editWindow.toggle(this.targetComment);
             this.isOpen = false;
             this.content = null;
         }
@@ -557,7 +521,7 @@ class DeleteHandler {
     onClickDeleteComment(){
          //TODO: if it was deleted before sent to server delete it completely, otherwise leave it in tree
 
-        deleteComment(this.targetComment);
+        comment.delete(this.targetComment);
         //FIXME: Correct the user ID when fixed
         new DeleteCommentPayload(this.id, 'admin000')
         this.hideModal();
@@ -571,13 +535,13 @@ class DeleteHandler {
         if (!this.isOpen){
             document.querySelector('.delete-comment-modal').style.display='block';
             this.isOpen = true;
-            fadeBackground();
+            background.fade();
         }
     }
     hideModal(){
         if (this.isOpen){
             this.cleanUp();
-            unfadeBackground();
+            background.unfade();
             this.isOpen = false;
 
         }
@@ -597,7 +561,7 @@ class LoginHandler {
         this.isOpen = false;
         this.addEventListeners();
         //Add the customization widget to the Login Modal
-        displayAvatarCustomization(document.getElementById('registerCustomizationContainer'));
+        avi.displayCustomUI(document.getElementById('registerCustomizationContainer'));
     }
     addEventListeners(){
         document.getElementById('loginForm').addEventListener('submit', this.submitLogin );
@@ -663,7 +627,7 @@ class LoginHandler {
 
             } else {
                 console.log('error');
-                showError(`Error ${data.status}: ${data.message}`);
+                error.showError(`Error ${data.status}: ${data.message}`);
             }
 
         })
@@ -682,13 +646,13 @@ class LoginHandler {
     }
     openModal(){
         //Open the modal
-        showLogin();
+        loginModal.show();
         document.addEventListener('click', this.handleGlobalClick);
         this.isOpen = true;
         avatarHandler.refreshColors();
     }
     closeModal(){
-        hideLogin();
+        loginModal.hide();
         this.isOpen = false;
         this.cleanUp();
     }
@@ -824,7 +788,7 @@ const buildComment = (currentNode) => {
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
     clonedComment.querySelector('.user-avatar').src = `${currentNode.user.image.png}`;
     const avatar = clonedComment.querySelector('.avatar-svg');
-    createAvatar(avatar, currentNode.user.avatar)
+    avi.create(avatar, currentNode.user.avatar)
     const timeAgo = clonedComment.querySelector('.time-ago');
     timeAgo.textContent = convertDateToFromNow(currentNode.createdAt);
     timeAgo.setAttribute('title', new Date(currentNode.createdAt));
@@ -1135,6 +1099,7 @@ const initializeComments = async() => {
                     parentId: null,
                     content: textArea.value
                 });
+                //send add comment request to server
                 apiRequest(serverURL + '/api/comments/add', 'POST', data).then(handleErrors)
                 .then(result => {
                     if (result.status === 500) {
@@ -1160,7 +1125,7 @@ let userData;
 initializeComments();
 
 const bugTest = () => {
-    showError(401, `You can't do that`);
+    error.showError(401, `You can't do that`);
 }
 
 const bugTestLogin = (event) => {
