@@ -29,9 +29,8 @@ class CommentTemplate {
         this.username = sessionStorage.getItem('username');
         //CHANGE WHEN USING NEW USERNAME and USER IMAGE SYSTEM
         this.user = {
-            avatar: userData.avatar,
-            username: sessionStorage.getItem('username'),
-            image: userData.image   
+            avatar: user.avatar,
+            username: user.username,
         };
     }
 }
@@ -416,9 +415,10 @@ class ReplyHandler {
                 let data = JSON.stringify({
                     parentId: this.parentId,
                     content: textArea.value
+
                 });
                 //send add comment request to server
-                apiRequest(serverURL + '/api/comments/add', 'POST', data).then(handleErrors)
+                apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
                 .then(result => {
                     if (result.status === 500) {
                         return;
@@ -570,69 +570,115 @@ class LoginHandler {
         if (event) event.preventDefault();
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        const response = await fetch (`${serverURL}/api/users/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password})
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            if (data.status == 200) {
-                // Handle successful login (e.g., redirect or show a message)
-                console.log('Login successful: ', data);
-                user.loginHandler.closeModal();
-            } else {
-                
+        let data = JSON.stringify({ username, password});
+        //Send request
+        apiRequest(serverURL + '/api/users/login', 'POST', data).then(handleErrors)
+        .then(result =>{
+            if (result.status === 500) {
+                error.showError(500, res.error);
+                return;
             }
+            result.json()
+            .then(json => {
+                user.isLoggedIn = true;
+                user.token = json.token;
+                user.id = json.id;
+                user.username = json.name;
+                user.avatar = json.avatar;
+                user.checkLogin();
+                user.loginHandler.closeModal();
+            })
         })
-        .catch((error) => {
-            console.error('Error during login:', error);
-        });
+        // const response = await fetch (`${serverURL}/api/users/login`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     body: JSON.stringify({ username, password})
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //     console.log(data);
+        //     if (data.status == 200) {
+        //         // Handle successful login (e.g., redirect or show a message)
+        //         console.log('Login successful: ', data);
+        //         user.loginHandler.closeModal();
+        //     } else {
+                
+        //     }
+        // })
+        // .catch((error) => {
+        //     console.error('Error during login:', error);
+        // });
     }
     async submitRegister(event){
         console.log("register button clicked");
         //Await server response
         //If registration is successful, submit a login request as well
         event.preventDefault(); // Prevent the default form submission
-        const username = document.getElementById('registerUsername').value;
-        const password = document.getElementById('registerPassword').value;
-        const serverUrl = `http://localHost:3000` //CHANGE ME
-        const avatar = {
-            portrait: document.querySelector('input[name="aviChoice"]:checked').value,
-            firstColor: document.getElementById('first-color-picker').value,
-            secondColor: document.getElementById('second-color-picker').value
-        }
-        const response = await fetch(`${serverUrl}/api/users/signup`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password, avatar })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status == 200){
-                // Handle successful registration (e.g., redirect or show a message)
-                console.log('Registration successful:', data);
-
-                //Start a login
-                document.getElementById('loginUsername').value = username;
-                document.getElementById('loginPassword').value = password;
-                //this.submitLogin(event);
-
-            } else {
-                console.log('error');
-                error.showError(`Error ${data.status}: ${data.message}`);
+        // const username = document.getElementById('registerUsername').value;
+        // const password = document.getElementById('registerPassword').value;
+        // const serverUrl = `http://localHost:3000` //CHANGE ME
+        // const avatar = {
+        //     portrait: document.querySelector('input[name="aviChoice"]:checked').value,
+        //     firstColor: document.getElementById('first-color-picker').value,
+        //     secondColor: document.getElementById('second-color-picker').value
+        // }
+        const data = {
+            username: document.getElementById('registerUsername').value,
+            password: document.getElementById('registerPassword').value,
+            avatar: {
+                portrait: document.querySelector('input[name="aviChoice"]:checked').value,
+                firstColor: document.getElementById('first-color-picker').value,
+                secondColor: document.getElementById('second-color-picker').value
             }
+        }
+        apiRequest(serverURL + '/api/users/signup', 'POST', data).then(handleErrors)
+        .then(result =>{
+            if (res.status === 500 || res.status === 409 || res.status === 401) {
+                error.showError(res.status, res.error);
+                return;
+            }
+            result.json()
+            .then(json => {
+                user.isLoggedIn = true;
+                user.token = json.token;
+                user.id = json.id;
+                user.avatar = json.avatar;
+                user.username = json.name;
+                user.checkLogin();
+                user.loginHandler.closeModal();
 
+            })
         })
-        .catch((error) => {
-            console.error('Error during registration:', error);
+        // const response = await fetch(`${serverUrl}/api/users/signup`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     body: JSON.stringify({ username, password, avatar })
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //     if (data.status == 200){
+        //         // Handle successful registration (e.g., redirect or show a message)
+        //         console.log('Registration successful:', data);
+
+        //         //Start a login
+        //         document.getElementById('loginUsername').value = username;
+        //         document.getElementById('loginPassword').value = password;
+        //         //this.submitLogin(event);
+
+        //     } else {
+        //         console.log('error');
+        //         error.showError(`Error ${data.status}: ${data.message}`);
+        //     }
+
+        // })
+        // .catch((error) => {
+        //     console.error('Error during registration:', error);
             
-        });
+        // });
             
     }
     handleGlobalClick(evt){
@@ -680,21 +726,39 @@ class UserHandler {
         this.sortMethod = 'new'; //top, new or old
         this.isLoggedIn = false;
         this.totalComments = 0; //Tally of total comments for purpose of keeping track of totals
-        this.checkData();
         //List of handlers
         this.loginHandler = new LoginHandler();
         this.replyHandler;
         this.sortHandler = new SortHandler();
+        this.token = null;
+        this.avatar = null;
 
     }
     checkData(){
-        //Check if user is logged in
     }
     openLoginModal(){
         this.loginHandler.openModal();
         //Open  login modal if isLoggedIn has failed or for other reasons (server failure eg)
     }
-    loginChanged(){
+    checkLogin(){
+        //Check if user is logged in
+        if (localStorage.getItem('token')){
+            user.isLoggedIn = true;
+            this.token = localStorage.getItem('token');
+        } else if (user.isLoggedIn){
+            //this.loginChanged('login')
+            localStorage.setItem('token', user.token);
+        }
+
+    }
+    loginChanged(state, token){
+        if (state == 'login') {
+            localStorage.setItem('token', token);
+
+
+        } else if (state == 'logout'){
+            
+        }
         //Change all the things that need to be changed when logged in or out
         //eg profile picture, toggle visibility of login buttons, etc.
     }
@@ -971,10 +1035,10 @@ const createReplyWindow = (parentComment) => {
 const buildReplyCard = () => {
     const replyCardTemplate = document.getElementById('reply-card-template');
     const clonedCard = replyCardTemplate.content.cloneNode(true);
-    if (currentUser) {
+    if (user.isLoggedIn) {
         //if theres a current user update the user
         const avatar = clonedCard.querySelector('.avatar-svg');
-        avi.create(avatar, currentUser.avatar);
+        avi.create(avatar, user.avatar);
         //TODO: Change this to the user from server
 
     } else {
@@ -1104,10 +1168,11 @@ const initializeComments = async() => {
                 //Message Server
                 let data = JSON.stringify({
                     parentId: null,
-                    content: textArea.value
+                    content: textArea.value,
+                    id: user.id
                 });
                 //send add comment request to server
-                apiRequest(serverURL + '/api/comments/add', 'POST', data).then(handleErrors)
+                apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
                 .then(result => {
                     if (result.status === 500) {
                         return;
