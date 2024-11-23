@@ -1,7 +1,7 @@
 
 //Replies are appended after 'child-comment-gridblock'
 let isProd = false; //flag for if testing server in development env
-let isOnline = true; //Flag for if server was successfully contacted
+let isOnline = false; //Flag for if server was successfully contacted
 //global variable to keep track of where to append new comments, which comment to delete, etc.
 let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
@@ -255,7 +255,6 @@ class CommentNode {
         }
     }
     createDeleteHandler(){
-        
         if (!deleteHandler) {
             deleteHandler = new DeleteHandler();
         }
@@ -263,13 +262,6 @@ class CommentNode {
         deleteHandler.showModal();
         //openDeleteModal(this.linkedCommentEl);
     }
-    sendServerRequest(data){
-        //Create an object that holds the info, and sends it to server after a delay
-    }
-    createSpamHandler(){
-        //Create a handler that holds on to upvote state changes and sends them to server
-    }
-
     deleteNode(){
         //Clear all references and listeners to free up memory when a comment is deleted
     }
@@ -720,6 +712,98 @@ class SortHandler {
         //Server request fetch goes here
     }
 }
+
+const getButtonName = (element, buttonName) => {
+    //Provided with an element and category of button (eg tray buttons, comment buttons)
+    //This finds and returns the identifier of the button for handling
+    // Check if the element has any class that starts with "buttonName-"
+    for (const className of element.classList) {
+        if (className.startsWith(`${buttonName}-`)) {
+            // Use a regular expression to extract the variable word
+            const match = className.match(/^tray-(.+?)-/);
+            if (match) {
+                return match[1]; // Return the variable word
+            }
+        }
+    }
+    return null; // Return null if no matching class is found
+}
+const headerClickHandler = (evt) => {
+    event.stopImmediatePropagation();
+
+    if (evt.target.closest('button')) {
+        return getButtonName (evt.target.closest('button'), "tray");
+
+    } else {
+        return null;
+    }
+}
+class HeaderHandler {
+    //Handler for the buttons in the header
+    constructor(){
+        document.querySelector('.utility-nav-tray').addEventListener('click', (evt) => this.onClick(evt))
+        //this.checkStatus();
+    }
+    checkOnlineStatus(){
+        //check if user is logged in and if user is 
+    }
+    onClick(evt){
+        const whichBtn = headerClickHandler(evt);
+        console.log(whichBtn);
+        switch (whichBtn) {
+            case 'login':
+                this.clickLogin();
+                break;
+            case 'logout':
+                this.clickLogout();
+                break;
+            case 'settings':
+                this.clickSettings();
+                break;
+            case 'profile':
+                this.clickProfile();
+                break;
+            default:
+                break;
+        }
+    }
+    clickLogin(){
+
+        if (!user.isLoggedIn && !user.loginHandler.isOpen){
+            user.loginHandler.openModal();
+        }
+    }
+    clickLogout(){
+
+    }
+    clickSettings(){
+        //Open settings modal
+    }
+    clickProfile(){
+        if (!user.isLoggedIn && !user.loginHandler.isOpen) {
+            //If not logged in, it opens login modal
+            user.loginHandler.openModal();
+        } else {
+            //otherwise it opens user profile modal
+        }
+        //Open Profile modal
+    }
+    login(){
+        //Hide the elements that shouldnt be shown when you're logged in
+        document.querySelector('.tray-login-button').classList.add('hidden');
+        document.querySelector('.tray-settings-button').classList.remove('hidden');
+        document.querySelector('.tray-logout-button').classList.remove('hidden');
+    }
+    logout(){
+        //Hide the elements that shouldnt be shown when you're logged out
+        document.querySelector('.tray-login-button').classList.remove('hidden');
+        document.querySelector('.tray-settings-button').classList.add('hidden');
+        document.querySelector('.tray-logout-button').classList.add('hidden');
+
+    }
+
+
+}
 class UserHandler {
     //Object for organizing all the handlers into one spot
     constructor(){
@@ -730,11 +814,20 @@ class UserHandler {
         this.loginHandler = new LoginHandler();
         this.replyHandler;
         this.sortHandler = new SortHandler();
+        this.headerHandler = new HeaderHandler();
         this.token = null;
         this.avatar = null;
-
+        this.checkStatus();
     }
-    checkData(){
+    checkStatus(){
+        //Check if the user is logged in and if the server is online
+        if (isOnline) {
+            document.querySelector('.online-status').textContent = 'Online';
+        } else {
+            document.querySelector('.online-status').textContent = 'Offline';
+
+        }
+
     }
     openLoginModal(){
         this.loginHandler.openModal();
@@ -744,20 +837,26 @@ class UserHandler {
         //Check if user is logged in
         if (localStorage.getItem('token')){
             user.isLoggedIn = true;
-            this.token = localStorage.getItem('token');
-        } else if (user.isLoggedIn){
-            //this.loginChanged('login')
-            localStorage.setItem('token', user.token);
+            this.token = localStorage.getItem('token'); //CHANGE LATER
+        } else if (user.isLoggedIn && user.token){
+            this.loginChanged('login', user.token) //CHANGE LATER
+            //localStorage.setItem('token', user.token); 
+        } else if (!user.isLoggedIn) {
+            this.loginChanged('logout')
         }
 
     }
     loginChanged(state, token){
-        if (state == 'login') {
+        if (state == 'login' && token) {
             localStorage.setItem('token', token);
-
-
-        } else if (state == 'logout'){
+            if (!this.avatar) {
+                //If avatar doesnt exist get it
+            }
+            this.headerHandler.login();
             
+        } else if (state == 'logout'){
+            this.headerHandler.logout();
+
         }
         //Change all the things that need to be changed when logged in or out
         //eg profile picture, toggle visibility of login buttons, etc.
@@ -1100,6 +1199,8 @@ const initializeComments = async() => {
             result = await fetchCommentData();
             isProd = true;
             isOnline = true;
+            user.checkStatus();
+            
         } catch (error) {
             //Default function to fetch local data if server is unavailable
             isProd = false;
@@ -1123,8 +1224,9 @@ const initializeComments = async() => {
 
     } else {
         //Otherwise work off Default Data
-        user.isLoggedIn = true; //FIX THIS LATER
+        //user.isLoggedIn = true; //FIX THIS LATER
         userData = dataResult.currentUser;
+        user.avatar = userData.avatar;
         totalComments = dataResult.totalComments;
         currentUser = dataResult.currentUser; //Will Change this when I have new system 
         sessionStorage.setItem("username", userData.username);
