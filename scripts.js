@@ -3,12 +3,9 @@
 let isProd = false; //flag for if testing server in development env
 let isOnline = false; //Flag for if server was successfully contacted
 //global variable to keep track of where to append new comments, which comment to delete, etc.
-let currentCommentFocus = document.getElementById('comments-section');
 const commentsContainer = document.getElementById('comments-section');
 //List of comment Nodes, with associated handlers for each one
 let currentUser = null;
-//global variable for saving text and node when editing comment
-const upvoteHandlers = [];
 //clientside var of how many comments in database total there are (for keeping track of ID assignment)
 let totalComments;
 //IMPORTS GO HERE
@@ -173,10 +170,7 @@ const commentButtonHandler = (evt, username) => {
     }
 }
 class CommentNode {
-    //WILL LINK ALL THE HANDLERS FROM EACH ASSOCIATED COMMENT
-    //SERVER BACKEND STUFF
     //Tracks ID and Parent ID with associated HTML element node, and associated handlers
-    //I feed this back to the database so it can sort through and modify the db when changes are made
     constructor (parentId, id, linkedCommentEl,username, isSubmitted) {
         // store the id and parent ID of the comment
         this.id = id;
@@ -203,7 +197,6 @@ class CommentNode {
                 case 'vote':
                     this.upvoteHandler.onClick(evt);
                     //Send event to upvote Handler
-                    //Create Buffer object for server Update
                     break;
                 case 'reply':
                     this.createReplyHandler();
@@ -556,7 +549,6 @@ class LoginHandler {
     addEventListeners(){
         document.getElementById('loginForm').addEventListener('submit', this.submitLogin );
         document.getElementById('registerForm').addEventListener('submit', this.submitRegister);
-        
     }
     async submitLogin(event){
         if (event) event.preventDefault();
@@ -581,41 +573,13 @@ class LoginHandler {
                 user.loginHandler.closeModal();
             })
         })
-        // const response = await fetch (`${serverURL}/api/users/login`, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     },
-        //     body: JSON.stringify({ username, password})
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //     console.log(data);
-        //     if (data.status == 200) {
-        //         // Handle successful login (e.g., redirect or show a message)
-        //         console.log('Login successful: ', data);
-        //         user.loginHandler.closeModal();
-        //     } else {
-                
-        //     }
-        // })
-        // .catch((error) => {
-        //     console.error('Error during login:', error);
-        // });
+ 
     }
     async submitRegister(event){
         console.log("register button clicked");
         //Await server response
         //If registration is successful, submit a login request as well
         event.preventDefault(); // Prevent the default form submission
-        // const username = document.getElementById('registerUsername').value;
-        // const password = document.getElementById('registerPassword').value;
-        // const serverUrl = `http://localHost:3000` //CHANGE ME
-        // const avatar = {
-        //     portrait: document.querySelector('input[name="aviChoice"]:checked').value,
-        //     firstColor: document.getElementById('first-color-picker').value,
-        //     secondColor: document.getElementById('second-color-picker').value
-        // }
         const data = {
             username: document.getElementById('registerUsername').value,
             password: document.getElementById('registerPassword').value,
@@ -642,36 +606,7 @@ class LoginHandler {
                 user.loginHandler.closeModal();
 
             })
-        })
-        // const response = await fetch(`${serverUrl}/api/users/signup`, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     },
-        //     body: JSON.stringify({ username, password, avatar })
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //     if (data.status == 200){
-        //         // Handle successful registration (e.g., redirect or show a message)
-        //         console.log('Registration successful:', data);
-
-        //         //Start a login
-        //         document.getElementById('loginUsername').value = username;
-        //         document.getElementById('loginPassword').value = password;
-        //         //this.submitLogin(event);
-
-        //     } else {
-        //         console.log('error');
-        //         error.showError(`Error ${data.status}: ${data.message}`);
-        //     }
-
-        // })
-        // .catch((error) => {
-        //     console.error('Error during registration:', error);
-            
-        // });
-            
+        }) 
     }
     handleGlobalClick(evt){
         //If the click did not happen inside the Modal, close the modal
@@ -698,14 +633,12 @@ class LoginHandler {
     }
 }
 
-//loginHandler = new LoginHandler();
 
 class SortHandler {
     constructor() {
         this.dropdownElement = document.getElementById('sort-dropdown');
         this.dropdownElement.addEventListener("change", (evt) => this.changeSelection(evt));
     }
-
     changeSelection(evt){
         user.sortMethod = evt.target.value;
         console.log('user sort By: ' + user.sortMethod);
@@ -729,7 +662,7 @@ const getButtonName = (element, buttonName) => {
     return null; // Return null if no matching class is found
 }
 const headerClickHandler = (evt) => {
-    event.stopImmediatePropagation();
+    evt.stopImmediatePropagation();
 
     if (evt.target.closest('button')) {
         return getButtonName (evt.target.closest('button'), "tray");
@@ -923,15 +856,7 @@ class AvatarCustomizationHandler {
 //Make a handler for each icon
 let avatarHandler = new AvatarCustomizationHandler();
 
-const addSelfDestructingEventListener = (element, eventType, callback) => {
-    //Add an EventListener that deletes itself when it's called
-    //UNUSED
-    let handler = () => {
-        callback();
-        element.removeEventListener(eventType, handler);
-    };
-    element.addEventListener(eventType, handler);
-};
+
 //Func for building comments from reply
 const buildComment = (currentNode) => {
     let commentTemplate;
@@ -943,7 +868,6 @@ const buildComment = (currentNode) => {
     }
     let clonedComment = commentTemplate.content.cloneNode(true);
     const commentContainer = clonedComment.querySelector('.parent-comment');
-
     clonedComment.querySelector('.comment-content').textContent = currentNode.content;
     clonedComment.querySelector('.comment-rating').textContent = currentNode.score;
     clonedComment.querySelector('.username').textContent = currentNode.user.username;
@@ -954,7 +878,6 @@ const buildComment = (currentNode) => {
     timeAgo.textContent = convertDateToFromNow(currentNode.createdAt);
     timeAgo.setAttribute('title', new Date(currentNode.createdAt));
     clonedComment.querySelector('.comment-number').textContent = `#${currentNode.id}`;
-
     //Add Deleted CSS flag to comment if it's deleted
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
         commentContainer.classList.add('deleted-comment');
@@ -977,31 +900,6 @@ const filterCommentPayload = (instance) => {
     
     return finalPayload;
 }   
-
-
-
-const sendServerCommentPayload = (payload) => {
-    //Default is get
-    let requestMethod = 'GET';
-    switch (payload.typeOfPayload) {
-        case 'addComment':
-            requestMethod = 'POST'
-            break;
-        case 'editComment':
-        case 'deleteComment':
-        case 'changeVote':
-            requestMethod = 'PATCH'
-            break;
-        default:
-            break;
-    }
-    console.log(`payload sent! body: ${payload}, method: ${requestMethod}`);
-
-}
-
-
-
-
 class ServerPayload {
     constructor(commentId) {
         //Types of server submissions: editComment, addComment, deleteComment, changeVote
@@ -1021,7 +919,6 @@ class ServerPayload {
         //Method that wipes out the object when a server response is made
     }
 }
-
 
 class AddCommentPayload extends ServerPayload {
     constructor(id, parentId, content){
@@ -1148,8 +1045,6 @@ const buildReplyCard = () => {
     return clonedCard;
 }
 
-
-
 //TODO
 
 //SYSTEM: 
@@ -1200,7 +1095,7 @@ const initializeComments = async() => {
             isProd = true;
             isOnline = true;
             user.checkStatus();
-            
+
         } catch (error) {
             //Default function to fetch local data if server is unavailable
             isProd = false;
@@ -1232,14 +1127,7 @@ const initializeComments = async() => {
         sessionStorage.setItem("username", userData.username);
         commentData = dataResult.comments;
 
-    }
-
-    //userData = dataResult.currentUser;
-    // totalComments = dataResult.totalComments;
-    // currentUser = dataResult.currentUser; //Will Change this when I have new system 
-    //sessionStorage.setItem("username", userData.username);
-    //const commentData = dataResult.comments;
-    
+    }  
     //Create seperate generalTree obj for each comment tree
     const treeArrays = [];
     //Store each comment tree as an entry in treeArrays
@@ -1291,7 +1179,6 @@ const initializeComments = async() => {
             //FIXME: Correct the actual user ID when it's done
             //Message Server
         } 
-
     });
 }
 let userData;
@@ -1309,7 +1196,6 @@ const bugTestLogin = (event) => {
         user.loginHandler.openModal();
     }
 }
-
 document.querySelector('.bugtest-button').addEventListener('click', bugTest);
 document.querySelector('.bugtest-login').addEventListener('click', bugTestLogin)
 //INVALID USERNAMES: 'DELETED'
