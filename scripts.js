@@ -1196,6 +1196,7 @@ const bugTestLogin = (event) => {
         user.loginHandler.openModal();
     }
 }
+
 document.querySelector('.bugtest-button').addEventListener('click', bugTest);
 document.querySelector('.bugtest-login').addEventListener('click', bugTestLogin)
 //INVALID USERNAMES: 'DELETED'

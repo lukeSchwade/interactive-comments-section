@@ -150,7 +150,11 @@ const editWindow = {
 }
 const commentSection = {
     clear(){
-
+        //wipe out all the comments
+        let comments = document.getElementsByClassName('comment-tree-grid-container');
+        while (comments[0]) {
+        comments[0].parentNode.removeChild(comments[0]);
+        }   
     },
 }
 
