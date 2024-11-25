@@ -120,17 +120,18 @@ body {
         justify-content: space-between;
         align-items: center;
     }
-    .tray-profile-btn {
-        height: 30px;
-        width: 30px;
-        @include roundedEdges(24px);
-        background-color: $grayish-blue;
-    }
+    
     .profile-container {
         @include flex-container(row);
         gap: 1em;
         align-items: center;
     }
+}
+.profile-btn {
+    height: 30px;
+    width: 30px;
+    @include roundedEdges(24px);
+    background-color: $grayish-blue;
 }
 .main-page-container {
     width:90%;

@@ -44,7 +44,7 @@ const loginModal = {
     }
 }
 
-const createAvatarShape = (selection) => {
+const createAvatarShape = (selection = 1) => {
     //Determines which svg the user avatar needs
     let path;
     let newShape;
@@ -85,7 +85,7 @@ const createAvatarShape = (selection) => {
 const avi = {
     create(svgElement, avatarData){
         //Gets the colors and avi selection, and modifies the svg element to display on DOM
-        let avatar = createAvatarShape(avatarData.portrait);
+        let avatar = createAvatarShape(avatarData?.portrait);
         avatar.setAttribute('fill', avatarData.firstColor);
         svgElement.querySelector('.background-circle').setAttribute('fill', avatarData.secondColor);
         svgElement.appendChild(avatar);

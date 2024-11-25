@@ -1,0 +1,17 @@
+const getDataFromCookie = (key) => {
+    //get the info from cookie stored from a particular key
+    let a = document.cookie.split("; ");
+    a = a.map(row => row.split("="));
+    let x;
+    if (key === "token") {
+      x = a.filter(row => row[0] === "token");
+    } else if (key === "userId") {
+      x = a.filter(row => row[0] === "userId");
+    } else if (key === "name") {
+        x = a.filter(row => row[0] === "name");
+    }
+    //returns empty string is cookie value is empty
+    if (x) return x.length === 0 ? "" : x[0][1];
+  };
+  
+  export default getDataFromCookie;

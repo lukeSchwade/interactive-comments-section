@@ -18,8 +18,13 @@
       <div class="left-container"></div>
       <div class="profile-container">
         <div class="online-status">Offline</div>
-        <button class="header tray-profile-btn">
-          
+        <button class="header tray-profile-btn profile-btn">
+          <svg class="avatar-svg user-avi" height="30" width="30">
+            <circle class="second background-circle" fill="#ff0000"
+            cx="15"
+            cy="15"
+            r="15"/>
+          </svg>
         </button>
         <button class="tray-login-btn">Login/Register</button>
         <button class="tray-settings-btn hidden">Settings</button>
@@ -32,7 +37,15 @@
 
 
       <div id="reply-card" class="add-comment-container">
-        <img class="user-avatar"src="./images/avatars/image-juliusomo.png" alt="your-avatar">
+        <!-- <img class="user-avatar"src="./images/avatars/image-juliusomo.png" alt="your-avatar"> -->
+        <button class="profile-btn">
+          <svg class="avatar-svg user-avi" height="30" width="30">
+            <circle class="second background-circle" fill="#ff0000"
+            cx="15"
+            cy="15"
+            r="15"/>
+          </svg>
+        </button>
         <div class="add-comment__input-container">
           <label class="add-comment__label" for="add-comment"></label>
           <textarea id="add-comment-textarea" class="submit-comment__input" name="add-comment" placeholder="Add a comment..."></textarea>
@@ -157,7 +170,7 @@
         <div class="comment-meta-gridblock">
           <div class="comment-meta">
             <!-- <img class="user-avatar" src="./images/avatars/image-amyrobson.png" alt="avatar"> -->
-            <svg class="avatar-svg" width="30" height="30">
+            <svg class="avatar-svg user-avi" width="30" height="30">
               <circle class="second background-circle" fill="#ff0000"
               cx="15"
               cy="15"

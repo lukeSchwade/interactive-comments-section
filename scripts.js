@@ -11,6 +11,8 @@ let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from "./modules/helpers.mjs";
 import { error, loginModal, background, avi, comment, editWindow, commentSection } from "./modules/clientrendering.mjs";
+import getDataFromCookie from "./modules/getDataFromCookie.mjs";
+
 //Function for sending API requests
 import apiRequest, {handleErrors} from './apiRequest.js';
 const serverURL = `http://localhost:3000`;//CHANGE THIS to DIFFERENT ADDRESS LATER
@@ -216,8 +218,7 @@ class CommentNode {
         } else {
             //Prompt to login instead
             evt.stopImmediatePropagation();
-            console.log("not logged in");
-
+            error.showError(400, "You need to log in")
             if (!user.loginHandler.isOpen){
                 user.openLoginModal();
             }
@@ -564,12 +565,13 @@ class LoginHandler {
             }
             result.json()
             .then(json => {
-                user.isLoggedIn = true;
-                user.token = json.token;
-                user.id = json.id;
-                user.username = json.name;
-                user.avatar = json.avatar;
-                user.checkLogin();
+                user.login(true, json.token, json.id, json.username, json.avatar)
+                // user.isLoggedIn = true;
+                // user.token = json.token;
+                // user.id = json.id;
+                // user.username = json.name;
+                // user.avatar = json.avatar;
+                // user.checkLogin();
                 user.loginHandler.closeModal();
             })
         })
@@ -597,12 +599,13 @@ class LoginHandler {
             }
             result.json()
             .then(json => {
-                user.isLoggedIn = true;
-                user.token = json.token;
-                user.id = json.id;
-                user.avatar = json.avatar;
-                user.username = json.name;
-                user.checkLogin();
+                user.login(true, json.token, json.id, json.username, json.avatar);
+                // user.isLoggedIn = true;
+                // user.token = json.token;
+                // user.id = json.id;
+                // user.username = json.name;
+                // user.avatar = json.avatar;
+                // user.checkLogin();
                 user.loginHandler.closeModal();
 
             })
@@ -677,9 +680,7 @@ class HeaderHandler {
         document.querySelector('.utility-nav-tray').addEventListener('click', (evt) => this.onClick(evt))
         //this.checkStatus();
     }
-    checkOnlineStatus(){
-        //check if user is logged in and if user is 
-    }
+
     onClick(evt){
         const whichBtn = headerClickHandler(evt);
         console.log(whichBtn);
@@ -707,7 +708,8 @@ class HeaderHandler {
         }
     }
     clickLogout(){
-
+        //log the user out
+        user.logout();
     }
     clickSettings(){
         //Open settings modal
@@ -723,34 +725,42 @@ class HeaderHandler {
     }
     login(){
         //Hide the elements that shouldnt be shown when you're logged in
-        document.querySelector('.tray-login-button').classList.add('hidden');
-        document.querySelector('.tray-settings-button').classList.remove('hidden');
-        document.querySelector('.tray-logout-button').classList.remove('hidden');
+        document.querySelector('.tray-login-btn').classList.add('hidden');
+        document.querySelector('.tray-settings-btn').classList.remove('hidden');
+        document.querySelector('.tray-logout-btn').classList.remove('hidden');
+        let headerAvis = document.getElementsByClassName('avatar-svg user-avi');
+        for (let i = 0; i < headerAvis.length; i++) {
+            avi.create(headerAvis[i], user.avatar)
+        };
     }
     logout(){
+        console.log("headerhandler logout called");
         //Hide the elements that shouldnt be shown when you're logged out
-        document.querySelector('.tray-login-button').classList.remove('hidden');
-        document.querySelector('.tray-settings-button').classList.add('hidden');
-        document.querySelector('.tray-logout-button').classList.add('hidden');
-
+        document.querySelector('.tray-login-btn').classList.remove('hidden');
+        document.querySelector('.tray-settings-btn').classList.add('hidden');
+        document.querySelector('.tray-logout-btn').classList.add('hidden');
+        let headerAvis = document.getElementsByClassName('avatar-svg user-avi');
+        for (let i = 0; i < headerAvis.length; i++) {
+            headerAvis[i].querySelector('.background-circle').setAttribute('fill', '#000000')
+            let el = headerAvis[i].querySelector('.first');
+            if (el) el.remove();
+        };
     }
-
-
 }
 class UserHandler {
     //Object for organizing all the handlers into one spot
     constructor(){
         this.sortMethod = 'new'; //top, new or old
-        this.isLoggedIn = false;
+
         this.totalComments = 0; //Tally of total comments for purpose of keeping track of totals
         //List of handlers
-        this.loginHandler = new LoginHandler();
+        this.loginHandler;
         this.replyHandler;
-        this.sortHandler = new SortHandler();
-        this.headerHandler = new HeaderHandler();
+        this.sortHandler ;
+        this.headerHandler;
+        this.isLoggedIn = false;
         this.token = null;
         this.avatar = null;
-        this.checkStatus();
     }
     checkStatus(){
         //Check if the user is logged in and if the server is online
@@ -760,43 +770,63 @@ class UserHandler {
             document.querySelector('.online-status').textContent = 'Offline';
 
         }
+        this.isLoggedIn = getDataFromCookie("userId") === "" ? false : true;
+        this.id = getDataFromCookie("userId");
+        this.token = getDataFromCookie("token");
+        this.avatar = getDataFromCookie("avatar");
+        if (this.isLoggedIn) {
+            this.updateStates(true);
+        } else {
+            this.updateStates(false);
+        }
 
     }
     openLoginModal(){
         this.loginHandler.openModal();
         //Open  login modal if isLoggedIn has failed or for other reasons (server failure eg)
     }
-    checkLogin(){
-        //Check if user is logged in
-        if (localStorage.getItem('token')){
-            user.isLoggedIn = true;
-            this.token = localStorage.getItem('token'); //CHANGE LATER
-        } else if (user.isLoggedIn && user.token){
-            this.loginChanged('login', user.token) //CHANGE LATER
-            //localStorage.setItem('token', user.token); 
-        } else if (!user.isLoggedIn) {
-            this.loginChanged('logout')
-        }
 
+    login (isLoggedIn, token, id, username, avatar){
+        this.isLoggedIn = isLoggedIn;
+        this.token = token;
+        this.id = id;
+        this.username = username;
+        this.avatar = avatar;
+        //Change user state to logged in
+        document.cookie = "token=" + token + "; path=/";
+        document.cookie = "userId=" + id + "; path=/";
+        document.cookie = "name=" + username + "; path=/";
+        document.cookie = "avatar=" + avatar + "; path=/"
+        this.updateStates(true)
     }
-    loginChanged(state, token){
-        if (state == 'login' && token) {
-            localStorage.setItem('token', token);
-            if (!this.avatar) {
-                //If avatar doesnt exist get it
-            }
+    logout(){
+        
+        //change user state to logged out
+        user.isLoggedIn = false;
+        user.id = null;
+        user.token = null;
+        document.cookie = "token =; expires = 12-12-1998; path=/;";
+        document.cookie = "userId =; expires = 12-12-1998; path=/;";
+        this.updateStates(false);
+    }
+    requestUserInfo(){
+        //request user info from the server
+    }
+    updateStates(loggedIn){
+        //updates states of all the elements that change whether logged in or not
+        if (loggedIn) {
             this.headerHandler.login();
-            
-        } else if (state == 'logout'){
+        } else {
             this.headerHandler.logout();
-
         }
-        //Change all the things that need to be changed when logged in or out
-        //eg profile picture, toggle visibility of login buttons, etc.
     }
 }
-let user = new UserHandler();
-
+const user = new UserHandler();
+user.loginHandler = new LoginHandler();
+user.sortHandler = new SortHandler();
+user.headerHandler = new HeaderHandler();
+user.checkStatus();
+//These are declared afterwards to prevent undefined errors
 class AvatarButton {
     //A class for each button on customization page which keeps track of the colors of avis 
     constructor(targetIcon){
