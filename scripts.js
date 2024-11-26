@@ -134,7 +134,7 @@ const buildUserReplyNode = (content, commentId) => {
     return new CommentTemplate(content, commentId);
 }
 
-const submitParentComment = (commentId) => {
+const submitParentComment = (commentId = 1) => {
     const replyWindow = document.getElementById('reply-card');
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent, commentId);
@@ -1221,11 +1221,15 @@ const initializeComments = async() => {
                     if (response.status === 500) {
                         return;
                     }
-                    submitParentComment(id);
+                    response.json()
+                    .then(json =>{
+                        console.log(json);
+                        submitParentComment(json.id);
+                    })
                 });
             } else {
                 //Build the HTML node of Comment
-                submitParentComment(id);
+                submitParentComment();
                 //Update the ID before sending server request
                 //this.id = totalComments;
                 new AddCommentPayload (totalComments, null, content);
