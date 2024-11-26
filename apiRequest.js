@@ -1,4 +1,4 @@
-const apiRequest = (url, method, data, additonalHeaders = false) => {
+const apiRequest = (url, method, data, additionalHeaders = false) => {
     let init = {
       method: method,
       headers: {
@@ -11,7 +11,7 @@ const apiRequest = (url, method, data, additonalHeaders = false) => {
       init.body = data;
     }
     if (additonalHeaders) {
-      init.headers.token = additonalHeaders;
+      init.headers.token = additionalHeaders;
     }
     return fetch(url, init)
       .then(result => {
