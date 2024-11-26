@@ -1,4 +1,4 @@
-const apiRequest = (url, method, data, additionalHeaders = false) => {
+const apiRequest = (url, method, data = null, additionalHeaders = false) => {
     let init = {
       method: method,
       headers: {
@@ -10,7 +10,7 @@ const apiRequest = (url, method, data, additionalHeaders = false) => {
     if (method !== "GET") {
       init.body = data;
     }
-    if (additonalHeaders) {
+    if (additionalHeaders) {
       init.headers.token = additionalHeaders;
     }
     return fetch(url, init)
@@ -23,7 +23,9 @@ const apiRequest = (url, method, data, additionalHeaders = false) => {
   };
   
   export function handleErrors(response) {
-    if (response.ok) {
+    //chaining this at end of APIrequest with .then() means it either passes the response thru the chain
+    //or throws an error that can be caught
+    if (response.ok) { //response.ok means an http status in the 200-299 range
       return response
     }
     throw Error(response)

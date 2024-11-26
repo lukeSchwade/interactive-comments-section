@@ -20,8 +20,8 @@ const defaultURL = './data.json';
 class CommentTemplate {
     //Class for a comment data for purpose of building user replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
-    constructor(content){
-        this.id = ++totalComments;
+    constructor(content, id = totalComments++){
+        this.id = id;
         this.content = content;
         this.score = 0;
         this.createdAt = new Date();
@@ -115,13 +115,13 @@ const moveReplyCard = (targetNode) => {
     // If you use After()you need to get the child to insert after
 }
 
-const submitReply = (evt) => {
+const submitReply = (evt, commentId = totalComments++) => {
     //Add reply Node to DOM, purely visual
     const targetButton = evt.target.closest('button');
     const replyWindow = targetButton.closest('.inline-reply-container'); 
     const parentWrapper = replyWindow.closest('.child-comment-gridblock')
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
-    const newNode = buildUserReplyNode(newContent);
+    const newNode = buildUserReplyNode(newContent, commentId);
     const newComment = buildComment(newNode, true);
     new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true);
     parentWrapper.insertBefore(newComment, replyWindow);
@@ -129,15 +129,15 @@ const submitReply = (evt) => {
     replyWindow.remove();
 }
 
-const buildUserReplyNode = (content) => {
+const buildUserReplyNode = (content, commentId) => {
     //creates a new template Node that is compatible with the buildComment Function
-    return new CommentTemplate(content);
+    return new CommentTemplate(content, commentId);
 }
 
-const submitParentComment = () => {
+const submitParentComment = (commentId) => {
     const replyWindow = document.getElementById('reply-card');
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
-    const newNode = buildUserReplyNode(newContent);
+    const newNode = buildUserReplyNode(newContent, commentId);
     const newComment = buildComment(newNode, true);
     new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true)
     const sortByWidget = document.getElementById('sort-by-dropdown');
@@ -405,11 +405,17 @@ class ReplyHandler {
                 });
                 //send add comment request to server
                 apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
-                .then(result => {
-                    if (result.status === 500) {
+                .then(response => {
+                    if (!response.ok) {
+                        error.showError(response.status, response)
                         return;
                     }
-                    submitReply(evt);
+                    response.json()
+                    .then(json =>{
+                        console.log(json);
+                        submitReply(evt, json.id);
+                    })
+                    
                 });
             } else {
                 //Build the HTML node of Comment
@@ -558,21 +564,16 @@ class LoginHandler {
         let data = JSON.stringify({ username, password});
         //Send request
         apiRequest(serverURL + '/api/users/login', 'POST', data).then(handleErrors)
-        .then(result =>{
-            if (result.status === 500) {
-                error.showError(500, res.error);
+        .then(response =>{
+            if (!response.ok) {
+                error.showError(response.status, response.error);
                 return;
             }
-            result.json()
+            response.json()
             .then(json => {
                 user.login(true, json.token, json.id, json.username, json.avatar)
-                // user.isLoggedIn = true;
-                // user.token = json.token;
-                // user.id = json.id;
-                // user.username = json.name;
-                // user.avatar = json.avatar;
-                // user.checkLogin();
                 user.loginHandler.closeModal();
+                location.reload();
             })
         })
  
@@ -582,32 +583,27 @@ class LoginHandler {
         //Await server response
         //If registration is successful, submit a login request as well
         event.preventDefault(); // Prevent the default form submission
-        const data = {
-            username: document.getElementById('registerUsername').value,
-            password: document.getElementById('registerPassword').value,
-            avatar: {
-                portrait: document.querySelector('input[name="aviChoice"]:checked').value,
-                firstColor: document.getElementById('first-color-picker').value,
-                secondColor: document.getElementById('second-color-picker').value
-            }
-        }
+        let username =document.getElementById('registerUsername').value;
+        let password = document.getElementById('registerPassword').value;
+        let avatar = {
+                    portrait: document.querySelector('input[name="aviChoice"]:checked').value,
+                    firstColor: document.getElementById('first-color-picker').value,
+                    secondColor: document.getElementById('second-color-picker').value
+                    }
+        const data = JSON.stringify({ username, password, avatar});
+
         apiRequest(serverURL + '/api/users/signup', 'POST', data).then(handleErrors)
-        .then(result =>{
-            if (res.status === 500 || res.status === 409 || res.status === 401) {
+        .then(response =>{
+            if (!response.ok) {
                 error.showError(res.status, res.error);
                 return;
             }
-            result.json()
+            response.json()
             .then(json => {
                 user.login(true, json.token, json.id, json.username, json.avatar);
-                // user.isLoggedIn = true;
-                // user.token = json.token;
-                // user.id = json.id;
-                // user.username = json.name;
-                // user.avatar = json.avatar;
-                // user.checkLogin();
-                user.loginHandler.closeModal();
 
+                user.loginHandler.closeModal();
+                location.reload();
             })
         }) 
     }
@@ -710,6 +706,7 @@ class HeaderHandler {
     clickLogout(){
         //log the user out
         user.logout();
+        location.reload();
     }
     clickSettings(){
         //Open settings modal
@@ -760,26 +757,34 @@ class UserHandler {
         this.headerHandler;
         this.isLoggedIn = false;
         this.token = null;
+        this.id = null;
+        this.username = null;
         this.avatar = null;
     }
     checkStatus(){
-        //Check if the user is logged in and if the server is online
-        if (isOnline) {
-            document.querySelector('.online-status').textContent = 'Online';
-        } else {
-            document.querySelector('.online-status').textContent = 'Offline';
-
-        }
+        //Check if the user is logged in and if any info is missing
         this.isLoggedIn = getDataFromCookie("userId") === "" ? false : true;
-        this.id = getDataFromCookie("userId");
         this.token = getDataFromCookie("token");
-        this.avatar = getDataFromCookie("avatar");
+
+        if (this.isLoggedIn) {
+            this.id = getDataFromCookie("userId");
+            this.username = getDataFromCookie("name");
+            this.avatar = JSON.parse(localStorage.getItem("avatar"));
+            //Try to update all the fields, and send server request if any of them are missing
+            if (this.token && (!this.username  || !this.avatar) ) {
+                //If you have a token but are missing other info, send request to get info again
+                this.requestUserInfo();
+            }
+  
+        } else {
+            user.logout();
+        }
+        //Update page state to be visually logged out or in
         if (this.isLoggedIn) {
             this.updateStates(true);
         } else {
             this.updateStates(false);
         }
-
     }
     openLoginModal(){
         this.loginHandler.openModal();
@@ -796,7 +801,9 @@ class UserHandler {
         document.cookie = "token=" + token + "; path=/";
         document.cookie = "userId=" + id + "; path=/";
         document.cookie = "name=" + username + "; path=/";
-        document.cookie = "avatar=" + avatar + "; path=/"
+        localStorage.setItem("username", username);
+        localStorage.setItem("avatar", JSON.stringify(avatar));
+        //document.cookie = "avatar=" + avatar + "; path=/"
         this.updateStates(true)
     }
     logout(){
@@ -807,10 +814,25 @@ class UserHandler {
         user.token = null;
         document.cookie = "token =; expires = 12-12-1998; path=/;";
         document.cookie = "userId =; expires = 12-12-1998; path=/;";
+        document.cookie = "name =; expires = 12-12-1998; path=/";
+        localStorage.removeItem("username");
+        localStorage.removeItem("avatar");
+        //localStorage.clear();
+        //document.cookie = "avatar =; expires = 12-12-1998; path=/"
         this.updateStates(false);
     }
     requestUserInfo(){
         //request user info from the server
+        apiRequest(serverURL + '/api/users/validate'+ this.id, 'GET', null, user.token)
+        .then(handleErrors)
+        .then(response => {
+            user.login(true, user.token, response.id, response.username, response.avatar)
+        })
+        .catch(err => {
+            error.showError(400, err)
+            this.logout();
+            //Log out if theres an error
+        });
     }
     updateStates(loggedIn){
         //updates states of all the elements that change whether logged in or not
@@ -931,6 +953,8 @@ const filterCommentPayload = (instance) => {
     return finalPayload;
 }   
 class ServerPayload {
+    //These are currently unused, just here as a historical document of previous design pattern
+    //Except for the upvote payload, I am still using the spam-protection
     constructor(commentId) {
         //Types of server submissions: editComment, addComment, deleteComment, changeVote
         this.typeOfPayload;
@@ -1124,12 +1148,12 @@ const initializeComments = async() => {
             result = await fetchCommentData();
             isProd = true;
             isOnline = true;
-            user.checkStatus();
-
+            document.querySelector('.online-status').textContent = 'Online';
         } catch (error) {
             //Default function to fetch local data if server is unavailable
             isProd = false;
             isOnline = false;
+            document.querySelector('.online-status').textContent = 'Offline';
             result = await defaultFetchCommentData();
         } finally {
             return result;
@@ -1193,15 +1217,15 @@ const initializeComments = async() => {
                 });
                 //send add comment request to server
                 apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
-                .then(result => {
-                    if (result.status === 500) {
+                .then(response => {
+                    if (response.status === 500) {
                         return;
                     }
-                    submitParentComment();
+                    submitParentComment(id);
                 });
             } else {
                 //Build the HTML node of Comment
-                submitParentComment();
+                submitParentComment(id);
                 //Update the ID before sending server request
                 //this.id = totalComments;
                 new AddCommentPayload (totalComments, null, content);
@@ -1226,9 +1250,17 @@ const bugTestLogin = (event) => {
         user.loginHandler.openModal();
     }
 }
-
+const bugTestGeneral = (evt) => {
+    console.log("bugtest");
+  const test = localStorage.getItem("blahblah");
+  const test2 = getDataFromCookie("blah");
+  const test3 = JSON.parse(localStorage.getItem("avatar"));
+    console.log(test3);
+}
 document.querySelector('.bugtest-button').addEventListener('click', bugTest);
-document.querySelector('.bugtest-login').addEventListener('click', bugTestLogin)
+document.querySelector('.bugtest-login').addEventListener('click', bugTestLogin);
+document.querySelector('.bugtest-general').addEventListener('click', bugTestGeneral);
+
 //INVALID USERNAMES: 'DELETED'
 //TODO
 

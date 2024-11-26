@@ -1,7 +1,7 @@
 const isCurrentUser = (input) => {
     // Check if a variable is current user
-    const currentUser = sessionStorage.getItem('username');
-    return input == currentUser ? true : false;
+    const currentUser = localStorage.getItem('username');
+    return input === currentUser ? true : false;
 }
 
 const isAdmin = () => {
