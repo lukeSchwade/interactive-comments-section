@@ -459,9 +459,23 @@ class EditHandler {
        const textArea = this.targetComment.querySelector('.edit-comment-input');
        if (textArea.value){
         const newContent = textArea.value;
-        editWindow.update(this.targetComment);
-        //SEND SERVER UPDATE HERE
-        //FIXME: fix user id
+        const data = JSON.stringify({
+            id: this.id,
+            content: newContent
+        });
+        apiRequest(serverURL + '/api/comments/edit', "POST", data, user.token).then(handleErrors)
+        .then(response => {
+            if (!response.ok)  {
+                error.showError(response.status, response.error)
+                return;
+            } else {
+                editWindow.update(this.targetComment);
+            }
+        })
+        .catch(err => {
+            error.showError(null, err);
+
+        });
         new EditPayload(this.id, 'admin000', newContent)
         this.closeEditWindow();
         
@@ -564,7 +578,7 @@ class LoginHandler {
         let data = JSON.stringify({ username, password});
         //Send request
         apiRequest(serverURL + '/api/users/login', 'POST', data).then(handleErrors)
-        .then(response =>{
+        .then(response => {
             if (!response.ok) {
                 error.showError(response.status, response.error);
                 return;
