@@ -12,7 +12,6 @@ let totalComments;
 import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from "./modules/helpers.mjs";
 import { error, loginModal, background, avi, comment, editWindow, commentSection } from "./modules/clientrendering.mjs";
 import getDataFromCookie from "./modules/getDataFromCookie.mjs";
-
 //Function for sending API requests
 import apiRequest, {handleErrors} from './apiRequest.js';
 const serverURL = `http://localhost:3000`;//CHANGE THIS to DIFFERENT ADDRESS LATER
@@ -34,8 +33,6 @@ class CommentTemplate {
         this.isDeleted = false;
     }
 }
-
-
 class GeneralTree {
     //This renders a tree of comments and children and places them on the DOM
     constructor(){
@@ -82,7 +79,6 @@ class GeneralTree {
                 appendTarget.appendChild(traverse(childNode, builtComment));
             }
             if (!currentNode.parentId) {
-               
                 appendHere.appendChild(builtComment);
 
             } else if (currentNode.parentId) {
@@ -132,14 +128,12 @@ const submitParentComment = (commentId = 1) => {
     const sortByWidget = document.getElementById('sort-by-dropdown');
     sortByWidget.after(newComment);
     replyWindow.querySelector('.submit-comment__input').value = '';
-    //SEND SERVER UPDATE HERE
 }
 
 const commentButtonHandler = (evt, username) => {
     //Determines which button on the comment was clicked
     //Global Click for closing edit window
     if (editHandler && editHandler.isOpen && !editHandler.targetComment.contains(evt.srcElement)) editHandler.closeEditWindow(); 
-
     if (evt.target.closest('button')) {
         const btnClassList = evt.target.closest('button').classList;
         if (btnClassList.contains("vote-btn")) {
@@ -179,7 +173,6 @@ class CommentNode {
         this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
         this.upvoteHandler.changeInitialVote(initialState);
     }
-
     onClick(evt){
         //Determine which button was clicked then determine which handler to pass it to
         const whichBtn = commentButtonHandler(evt, this.username);
@@ -215,9 +208,6 @@ class CommentNode {
         }
 
     }
-    createUpvoteHandler(){
-        //Create an Upvote handler and attach it to this node
-    }
     createReplyHandler(){
         //If there isn't already a replyhandler, initialize it
         if (!user.replyHandler) {
@@ -244,11 +234,8 @@ class CommentNode {
         }
         deleteHandler.updateData(this.id, this.linkedCommentEl);
         deleteHandler.showModal();
-        //openDeleteModal(this.linkedCommentEl);
     }
-
 }
-
 class UpvoteHandler {
     //Attached to every upvote widget and manages the votes
     constructor (buttonWidget, id) {
@@ -265,7 +252,6 @@ class UpvoteHandler {
         //Determine how to update the state
         //Create an Upvote Payload 
         if (!this.spamHandler) this.spamHandler = new UpvotePayload(this.id, user.id, this.state) 
-        
         if (evt.target.closest('button')) {
             let target = evt.target.closest('button');
             if (target.className.includes('plus')) {
@@ -274,7 +260,6 @@ class UpvoteHandler {
                 this.updateState(-1);
             }
         }
-
     }
     updateState(newState){
         //Change the state based on which button was pressed
@@ -421,7 +406,6 @@ class ReplyHandler {
         //Cancel the reply and close window
         this.replyCard.remove();
     }
-
 }
 //Single Edit handler that is loosely attached to corresponding comment
 let editHandler;
@@ -481,7 +465,6 @@ class EditHandler {
             editWindow.toggle(this.targetComment);
             this.targetComment.querySelector('.edit-comment-input').focus();
         }
-
     }
     closeEditWindow() {
         if (this.isOpen){
@@ -599,7 +582,6 @@ class LoginHandler {
                     secondColor: document.getElementById('second-color-picker').value
                     }
         const data = JSON.stringify({ username, password, avatar});
-
         apiRequest(serverURL + '/api/users/signup', 'POST', data).then(handleErrors)
         .then(response =>{
             if (!response.ok) {
@@ -609,7 +591,6 @@ class LoginHandler {
             response.json()
             .then(json => {
                 user.login(true, json.token, json.id, json.username, json.avatar);
-
                 user.loginHandler.closeModal();
                 location.reload();
             })
@@ -814,26 +795,23 @@ class UserHandler {
     }
     openLoginModal(){
         this.loginHandler.openModal();
-        //Open  login modal if isLoggedIn has failed or for other reasons (server failure eg)
     }
 
     login (isLoggedIn, token, id, username, avatar){
+        //change user state to logged in
         this.isLoggedIn = isLoggedIn;
         this.token = token;
         this.id = id;
         this.username = username;
         this.avatar = avatar;
-        //Change user state to logged in
         document.cookie = "token=" + token + "; path=/";
         document.cookie = "userId=" + id + "; path=/";
         document.cookie = "name=" + username + "; path=/";
         localStorage.setItem("username", username);
         localStorage.setItem("avatar", JSON.stringify(avatar));
-        //document.cookie = "avatar=" + avatar + "; path=/"
         this.updateStates(true)
     }
     logout(){
-        
         //change user state to logged out
         user.isLoggedIn = false;
         user.id = null;
@@ -843,8 +821,6 @@ class UserHandler {
         document.cookie = "name =; expires = 12-12-1998; path=/";
         localStorage.removeItem("username");
         localStorage.removeItem("avatar");
-        //localStorage.clear();
-        //document.cookie = "avatar =; expires = 12-12-1998; path=/"
         this.updateStates(false);
     }
     requestUserInfo(){
@@ -1045,7 +1021,6 @@ class UpvotePayload extends ServerPayload {
         this.increment = 0;
         this.payloadType = "changeUpvote";
         this.initializeTimer();
-
     }
     initializeTimer(){
         //anti-spam timer that waits 2 seconds after the last state change before sending server request 
@@ -1078,8 +1053,7 @@ class UpvotePayload extends ServerPayload {
          //If timer isn't running, restart it
         if (!this.intervalTimer) {
             this.initializeTimer();
-            //and change the original state change
-            
+            //and change the original state change 
         } 
         this.resetTimer();
     }
@@ -1087,7 +1061,6 @@ class UpvotePayload extends ServerPayload {
         this.remainingTime = 2;
     }
 }
-
 
 const createReplyWindow = (parentComment) => {
     //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
@@ -1125,17 +1098,6 @@ const buildReplyCard = () => {
     return clonedCard;
 }
 
-//TODO
-
-//SYSTEM: 
-//Add ID to currently edited comment "focusedComment" when its focuses, and delete it when another comment is being focused
-
-//SPAM HANDLER OBJECT
-//Everytime a request is made, it creates an object holding the request, and updates with new state changes
-//Eg. if you press upvote 20 times, it will not contact the server until you stop pressing upvote for 2s, 
-//then it will send the final state change to the server
-//there will need to be server side spam detection to prevent workarounds (like refreshspamming to get around delay)
-
 //Fetches a batch of comments from server and builds them on the DOM
 //Object that handles interaction w the server
 
@@ -1152,19 +1114,7 @@ const fetchComments = async () =>{
 
 const initializeComments = async() => {
     //Fetches from Server, if that fails populates from test data
-    
-    // const fetchCommentData = async () => {
-    //     return fetch(`${serverURL}/api/comments/get/${user.sortMethod}`)
-    //     // JSONify the response
-    //     .then(res => res.json())
-    //     // return the data
-    //     .then(data => data)
-    //     .catch(err => {
-    //         console.log("error:" + error);
 
-    //         throw new Error("Error contacting server: " + err)
-    //     });
-    // }
     const defaultFetchCommentData = async () => {
         //fetch locally stored placeholder comments
         return fetch(defaultURL)
@@ -1206,7 +1156,6 @@ const initializeComments = async() => {
 
     } else {
         //Otherwise work off Default Data
-        //user.isLoggedIn = true; //FIX THIS LATER
         userData = dataResult.currentUser;
         user.avatar = userData.avatar;
         totalComments = dataResult.totalComments;
@@ -1263,12 +1212,9 @@ const initializeComments = async() => {
             } else {
                 //Build the HTML node of Comment
                 submitParentComment();
-                //Update the ID before sending server request
-                //this.id = totalComments;
                 new AddCommentPayload (totalComments, null, content);
             }
-            //FIXME: Correct the actual user ID when it's done
-            //Message Server
+
         } 
     });
 }
@@ -1297,39 +1243,3 @@ const bugTestGeneral = (evt) => {
 document.querySelector('.bugtest-button').addEventListener('click', bugTest);
 document.querySelector('.bugtest-login').addEventListener('click', bugTestLogin);
 document.querySelector('.bugtest-general').addEventListener('click', bugTestGeneral);
-
-//INVALID USERNAMES: 'DELETED'
-//TODO
-
-//Will Need to change the position of pushing the node to handler list 
-//from the tree to the buildComment Function
-//When the state changes, read all the comments and update the Data file
-//Add way to add comment to node tree and Database simultaneously
-//builtComment.querySelector('div').setAttribute('id', 'editMe');
-//const currentComment = document.getElementById('editMe');
-//currentComment.removeAttribute('id');
-
-//SPAM DETECTION
-//Upvotes need to have a timeout on backend
-//Limit to number of comments per day
-//User can edit no more than 3 comments in a second
-
-//Server-side will need to correct the ID of comments on the server-side, since client side will be wrong
-//This might create bugs if the Parent IDs are incorrect client-side I'll think of a way to match
-//(Maybe match Parent's text context just to double check)
-
-//Add account creation
-//Check if the user is currently logged in when they try to reply on a comment
-//stores Username, password, choice of profile pic (only 8)
-//PROFILE PIC IDEA: Choose from 1 of 8 images, and assign a random hue to that user (massive amount of variations)
-//(random generated profile pics with slightly diff colors)
-//fetchData();
-
- //Possible design pattern
-//Build a tiered object system, where each object holds an ID and all the associated button handlers
-
-//Each reply button onclick finds the closest ancestor using closest()
-//everything is calculated relative to that
-//EG you can insert the reply bar after the comment sibling, you can add the comment
-//after the page
-//Then separately add/delete entries to the data JSON
