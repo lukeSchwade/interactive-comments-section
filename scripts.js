@@ -201,7 +201,7 @@ class CommentNode {
         } else {
             //Prompt to login instead
             evt.stopImmediatePropagation();
-            error.showError(400, "You need to log in")
+            error.showError("You need to log in")
             if (!user.loginHandler.isOpen){
                 user.openLoginModal();
             }
@@ -380,16 +380,16 @@ class ReplyHandler {
                 //send add comment request to server
                 apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
                 .then(response => {
-                    if (!response.ok) {
-                        error.showError(response.status, response)
-                        return;
-                    }
                     response.json()
                     .then(json =>{
-                        console.log(json);
                         submitReply(evt, json.id);
+                    }) 
+                })
+                .catch(err => {
+                    err.json()
+                    .then(json => {
+                        handleServerProblem(json.message, json.status);
                     })
-                    
                 });
             } else {
                 //Build the HTML node of Comment
@@ -438,16 +438,13 @@ class EditHandler {
         });
         apiRequest(serverURL + '/api/comments/edit', "POST", data, user.token).then(handleErrors)
         .then(response => {
-            if (!response.ok)  {
-                error.showError(response.status, response.error)
-                return;
-            } else {
-                editWindow.update(this.targetComment);
-            }
+            if (response.ok) editWindow.update(this.targetComment);
         })
         .catch(err => {
-            error.showError(null, err);
-
+            err.json()
+            .then(json => {
+                handleServerProblem(json.message, json.status)
+            })
         });
         new EditPayload(this.id, 'admin000', newContent)
         this.closeEditWindow();
@@ -501,8 +498,11 @@ class DeleteHandler {
             if(response.ok) comment.delete(this.targetComment);
         })
         .catch(err => {
-            error.showError(1, err);
-        })
+            err.json()
+            .then(json => {
+                handleServerProblem(json.message, json.status);
+            })
+        });
         //FIXME: Correct the user ID when fixed
         new DeleteCommentPayload(this.id, 'admin000')
         this.hideModal();
@@ -556,17 +556,19 @@ class LoginHandler {
         //Send request
         apiRequest(serverURL + '/api/users/login', 'POST', data).then(handleErrors)
         .then(response => {
-            if (!response.ok) {
-                error.showError(response.status, response.error);
-                return;
-            }
             response.json()
             .then(json => {
                 user.login(true, json.token, json.id, json.username, json.avatar)
                 user.loginHandler.closeModal();
                 location.reload();
-            })
+            });
         })
+        .catch(err => {
+            err.json()
+            .then(json => {
+                handleServerProblem(json.message, json.status);
+            })
+        });
  
     }
     async submitRegister(event){
@@ -584,17 +586,19 @@ class LoginHandler {
         const data = JSON.stringify({ username, password, avatar});
         apiRequest(serverURL + '/api/users/signup', 'POST', data).then(handleErrors)
         .then(response =>{
-            if (!response.ok) {
-                error.showError(res.status, res.error);
-                return;
-            }
             response.json()
             .then(json => {
                 user.login(true, json.token, json.id, json.username, json.avatar);
                 user.loginHandler.closeModal();
                 location.reload();
             })
-        }) 
+        })
+        .catch(err => {
+            err.json()
+            .then(json => {
+                handleServerProblem(json.message, json.status);
+            })
+        });
     }
     handleGlobalClick(evt){
         //If the click did not start inside the modal or end inside the modal
@@ -831,7 +835,7 @@ class UserHandler {
             user.login(true, user.token, response.id, response.username, response.avatar)
         })
         .catch(err => {
-            error.showError(400, err)
+            error.showError(err, 400)
             this.logout();
             //Log out if theres an error
         });
@@ -844,6 +848,12 @@ class UserHandler {
             this.headerHandler.logout();
         }
     }
+    reLogin(){
+        //If theres an error with tokens log out user and prompt them to log in again
+        user.logout();
+        user.loginHandler.showModal();
+        error.showError("An error occured, please log in again");
+    }
 }
 const user = new UserHandler();
 user.loginHandler = new LoginHandler();
@@ -851,6 +861,14 @@ user.sortHandler = new SortHandler();
 user.headerHandler = new HeaderHandler();
 user.checkStatus();
 //These are declared afterwards to prevent undefined errors
+
+const handleServerProblem =(errorMessage, status) => {
+    if (status == 401 && errorMessage == 'Token Expired. Please log in again') {
+        user.reLogin();
+    } else {
+        error.showError(errorMessage, status);
+    }
+}
 class AvatarButton {
     //A class for each button on customization page which keeps track of the colors of avis 
     constructor(targetIcon){
@@ -1111,9 +1129,24 @@ const fetchComments = async () =>{
         throw new Error ("error contacting server: " + err);
     });
 }
+const renderComments = async (commentData) => {
+    //
+    const treeArrays = [];
 
+    commentData.forEach( (el, index) => {
+        treeArrays.push(new GeneralTree());
+        treeArrays[index].root = commentData[index];
+    })
+    for (const tree of treeArrays) {
+        tree.printTreeAsString();
+        //Create the HTML tree and simultaneously create the skeleton of Object Handlers
+        tree.preOrderTraversalRecursive(commentsContainer);
+    }
+    //Move the reply card to top if it isn't already
+    moveReplyCard(commentsContainer);
+}
 const initializeComments = async() => {
-    //Fetches from Server, if that fails populates from test data
+    // initial fetching of comments on page load
 
     const defaultFetchCommentData = async () => {
         //fetch locally stored placeholder comments
@@ -1148,12 +1181,6 @@ const initializeComments = async() => {
     let commentData;
     if (isOnline) {
         commentData = dataResult.commentTree;
-        if (user.isLoggedIn){
-            //Fill user data with correct data
-        } else {
-            //Otherwise use default
-        }
-
     } else {
         //Otherwise work off Default Data
         userData = dataResult.currentUser;
@@ -1164,25 +1191,21 @@ const initializeComments = async() => {
         commentData = dataResult.comments;
 
     }  
-    //Create seperate generalTree obj for each comment tree
-    const treeArrays = [];
     //Store each comment tree as an entry in treeArrays
-    if (isOnline) {
-        
-    } else {
-        
-    }
-    commentData.forEach( (el, index) => {
-        treeArrays.push(new GeneralTree());
-        treeArrays[index].root = commentData[index];
-    })
-    for (const tree of treeArrays) {
-        tree.printTreeAsString();
-        //Create the HTML tree and simultaneously create the skeleton of Object Handlers
-        tree.preOrderTraversalRecursive(commentsContainer);
-    }
-    //Move the reply card to top if it isn't already
-    moveReplyCard(commentsContainer);
+    renderComments(commentData);
+    // const treeArrays = [];
+
+    // commentData.forEach( (el, index) => {
+    //     treeArrays.push(new GeneralTree());
+    //     treeArrays[index].root = commentData[index];
+    // })
+    // for (const tree of treeArrays) {
+    //     tree.printTreeAsString();
+    //     //Create the HTML tree and simultaneously create the skeleton of Object Handlers
+    //     tree.preOrderTraversalRecursive(commentsContainer);
+    // }
+    // //Move the reply card to top if it isn't already
+    // moveReplyCard(commentsContainer);
     //Add Evt listener to top comment reply widget
     const replyCardBtn = document.getElementById('reply-card-submit-btn');
     replyCardBtn.addEventListener('click', (e) => {
@@ -1200,13 +1223,17 @@ const initializeComments = async() => {
                 //send add comment request to server
                 apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
                 .then(response => {
-                    if (response.status === 500) {
-                        return;
-                    }
+
                     response.json()
                     .then(json =>{
                         console.log(json);
                         submitParentComment(json.id);
+                    })
+                })
+                .catch(err => {
+                    err.json()
+                    .then(json => {
+                        handleServerProblem(json.message, json.status);
                     })
                 });
             } else {
@@ -1223,7 +1250,7 @@ let userData;
 initializeComments();
 
 const bugTest = () => {
-    error.showError(401, `You can't do that`);
+    error.showError('You cant do that', 404);
 }
 
 const bugTestLogin = (event) => {

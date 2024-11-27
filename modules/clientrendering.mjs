@@ -1,6 +1,6 @@
 //Module functions for most DOM manipulation
 const error = {
-    async showError (status, response = "There was an issue") {
+    async showError (response, status = null) {
         //Pops up an error at bottom of screen, then makes it disappear
         const errorModal = document.querySelector('.error-modal');
         const errorMessage = document.querySelector(".error-message");
