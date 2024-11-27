@@ -75,7 +75,7 @@ class GeneralTree {
                 //Create an object for managing handlers if comment isn't deleted
                 //COMMENTED OUT UNTIL FUNCTIONAL
                 // commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
-                new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username);
+                new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username, currentNode.initialVote);
                 //REPLACE ABOVE WHEN FINISHED
             }
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
@@ -124,7 +124,7 @@ const submitReply = (evt, commentId = totalComments++) => {
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent, commentId);
     const newComment = buildComment(newNode, true);
-    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true);
+    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, 1);
     parentWrapper.insertBefore(newComment, replyWindow);
     //Delete the reply Window
     replyWindow.remove();
@@ -140,7 +140,7 @@ const submitParentComment = (commentId = 1) => {
     const newContent = replyWindow.querySelector('.submit-comment__input').value;
     const newNode = buildUserReplyNode(newContent, commentId);
     const newComment = buildComment(newNode, true);
-    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, true)
+    new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, 1)
     const sortByWidget = document.getElementById('sort-by-dropdown');
     sortByWidget.after(newComment);
     replyWindow.querySelector('.submit-comment__input').value = '';
@@ -174,7 +174,7 @@ const commentButtonHandler = (evt, username) => {
 }
 class CommentNode {
     //Tracks ID and Parent ID with associated HTML element node, and associated handlers
-    constructor (parentId, id, linkedCommentEl,username, isSubmitted) {
+    constructor (parentId, id, linkedCommentEl,username, initialState = 0) {
         // store the id and parent ID of the comment
         this.id = id;
         this.parentId = parentId;
@@ -182,15 +182,16 @@ class CommentNode {
         this.username = username;
         this.upvoteHandler = null;
         this.serverRequestHandler = null;
-        this.init(isSubmitted);
+        this.init(initialState);
         this.clickListener = this.linkedCommentEl.addEventListener('click', (evt) => this.onClick(evt)); 
         // the arrow func is bc arrow funcs do not have their own 'this' but reg functions do in an eventlistener
     }
-    init(isSubmitted){
+    init(initialState){
         //Create all the handlers
         this.upvoteHandler = new UpvoteHandler(this.linkedCommentEl.querySelector('.vote-container'), this.id);
-        if (isSubmitted) this.upvoteHandler.selfUpvote();
+        this.upvoteHandler.changeInitialVote(initialState);
     }
+
     onClick(evt){
         //Determine which button was clicked then determine which handler to pass it to
         const whichBtn = commentButtonHandler(evt, this.username);
@@ -312,7 +313,6 @@ class UpvoteHandler {
             this.updateVisual(newState);
             //Send a server Update HERE
             this.spamHandler.updateState(this.state)
-
         }
     }
     updateVisual(newState) {
@@ -341,12 +341,17 @@ class UpvoteHandler {
                 break;
         }
     }
-    selfUpvote (){
-        //Automatically upvote your own comment when submitted
-        //doesn't call updateState to not mess with serverside (which will default +1 to new comments)
-        this.state = 1;
-        this.updateVisual(1);
+    changeInitialVote(initialVote = 0){
+        //Change the state of the upvote indicator w/o msging server
+        if (initialVote == 1) {
+            this.state = 1;
+            this.updateVisual(1);
+        } else if (initialVote == -1) {
+            this.state = 1;
+            this.updateState(-1);
+        }
     }
+
 }
 
 class ReplyHandler {
@@ -1135,6 +1140,7 @@ const buildReplyCard = () => {
 
 const FetchComments = (sortBy) =>{
     //Fetch Comments
+    apiRequest(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token)
 }
 
 const initializeComments = async() => {
