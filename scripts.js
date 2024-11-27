@@ -652,8 +652,10 @@ class SortHandler {
     changeSelection(evt){
         user.sortMethod = evt.target.value;
         console.log('user sort By: ' + user.sortMethod);
-        //Server request fetch goes here
-        fetchComments
+        fetchComments()
+        .then (response => {
+            renderComments(response.commentTree);
+        })
     }
 }
 
@@ -1121,7 +1123,7 @@ const buildReplyCard = () => {
 
 const fetchComments = async () =>{
     //Fetch Comments
-    commentSection.clear();
+
     return apiRequest(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token).then(handleErrors)
     .then(response => response.json())
     .then(data => data)
@@ -1131,6 +1133,7 @@ const fetchComments = async () =>{
 }
 const renderComments = async (commentData) => {
     //
+    commentSection.clear();
     const treeArrays = [];
 
     commentData.forEach( (el, index) => {
