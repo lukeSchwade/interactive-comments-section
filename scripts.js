@@ -386,10 +386,7 @@ class ReplyHandler {
                     }) 
                 })
                 .catch(err => {
-                    err.json()
-                    .then(json => {
-                        handleServerProblem(json.message, json.status);
-                    })
+                    handleServerProblem(err);
                 });
             } else {
                 //Build the HTML node of Comment
@@ -441,10 +438,7 @@ class EditHandler {
             if (response.ok) editWindow.update(this.targetComment);
         })
         .catch(err => {
-            err.json()
-            .then(json => {
-                handleServerProblem(json.message, json.status)
-            })
+            handleServerProblem(err);
         });
         new EditPayload(this.id, 'admin000', newContent)
         this.closeEditWindow();
@@ -491,17 +485,14 @@ class DeleteHandler {
         this.targetComment = newComment;
         this.id = newId;
     }
-    onClickDeleteComment(){
+    onClickDeleteComment(targetComment){
         const data = JSON.stringify({id: this.id})
         apiRequest(serverURL + "/api/comments/delete", "POST", data, user.token ).then(handleErrors)
         .then(response => {
-            if(response.ok) comment.delete(this.targetComment);
+            if(response.ok) comment.delete(targetComment);
         })
         .catch(err => {
-            err.json()
-            .then(json => {
-                handleServerProblem(json.message, json.status);
-            })
+            handleServerProblem(err)
         });
         //FIXME: Correct the user ID when fixed
         new DeleteCommentPayload(this.id, 'admin000')
@@ -564,10 +555,8 @@ class LoginHandler {
             });
         })
         .catch(err => {
-            err.json()
-            .then(json => {
-                handleServerProblem(json.message, json.status);
-            })
+            handleServerProblem(err);
+
         });
  
     }
@@ -594,10 +583,7 @@ class LoginHandler {
             })
         })
         .catch(err => {
-            err.json()
-            .then(json => {
-                handleServerProblem(json.message, json.status);
-            })
+            handleServerProblem(err);
         });
     }
     handleGlobalClick(evt){
@@ -864,11 +850,19 @@ user.headerHandler = new HeaderHandler();
 user.checkStatus();
 //These are declared afterwards to prevent undefined errors
 
-const handleServerProblem =(errorMessage, status) => {
-    if (status == 401 && errorMessage == 'Token Expired. Please log in again') {
+const handleServerProblem =(err) => {
+    let errorMessage;
+    try {
+        //if it's a server issue
+        errorMessage = JSON.parse(err.message);
+    } catch (error) {
+        JSON.stringify(err);
+        errorMessage = JSON.parse(err);
+    }
+    if (errorMessage.status == 401 && errorMessage.message == 'Token Expired. Please log in again') {
         user.reLogin();
     } else {
-        error.showError(errorMessage, status);
+        error.showError(errorMessage);
     }
 }
 class AvatarButton {
@@ -951,7 +945,7 @@ const buildComment = (currentNode) => {
     const timeAgo = clonedComment.querySelector('.time-ago');
     timeAgo.textContent = convertDateToFromNow(currentNode.createdAt);
     timeAgo.setAttribute('title', new Date(currentNode.createdAt));
-    clonedComment.querySelector('.comment-number').textContent = `#${currentNode.id}`;
+    //clonedComment.querySelector('.comment-number').textContent = `#${currentNode.id}`;
     //Add Deleted CSS flag to comment if it's deleted
     if (clonedComment.querySelector('.username').textContent == 'Deleted') {
         commentContainer.classList.add('deleted-comment');
@@ -1234,10 +1228,7 @@ const initializeComments = async() => {
                     })
                 })
                 .catch(err => {
-                    err.json()
-                    .then(json => {
-                        handleServerProblem(json.message, json.status);
-                    })
+                    handleServerProblem(err);
                 });
             } else {
                 //Build the HTML node of Comment

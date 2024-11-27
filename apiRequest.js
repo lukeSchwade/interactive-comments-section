@@ -28,7 +28,11 @@ const apiRequest = (url, method, data = null, additionalHeaders = false) => {
     if (response.ok) { //response.ok means an http status in the 200-299 range
       return response
     }
-    throw Error(response)
+    return response.json().then(errorResponse => {
+      //
+      throw new Error(JSON.stringify(errorResponse));
+    });
   }
+
   export default apiRequest
   
