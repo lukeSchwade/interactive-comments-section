@@ -667,6 +667,7 @@ class SortHandler {
         user.sortMethod = evt.target.value;
         console.log('user sort By: ' + user.sortMethod);
         //Server request fetch goes here
+        fetchComments
     }
 }
 
@@ -1138,26 +1139,32 @@ const buildReplyCard = () => {
 //Fetches a batch of comments from server and builds them on the DOM
 //Object that handles interaction w the server
 
-const FetchComments = (sortBy) =>{
+const fetchComments = async () =>{
     //Fetch Comments
-    apiRequest(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token)
+    commentSection.clear();
+    return apiRequest(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token).then(handleErrors)
+    .then(response => response.json())
+    .then(data => data)
+    .catch(err => {
+        throw new Error ("error contacting server: " + err);
+    });
 }
 
 const initializeComments = async() => {
     //Fetches from Server, if that fails populates from test data
     
-    const fetchCommentData = async () => {
-        return fetch(`${serverURL}/api/comments/get/${user.sortMethod}`)
-        // JSONify the response
-        .then(res => res.json())
-        // return the data
-        .then(data => data)
-        .catch(err => {
-            console.log("error:" + error);
+    // const fetchCommentData = async () => {
+    //     return fetch(`${serverURL}/api/comments/get/${user.sortMethod}`)
+    //     // JSONify the response
+    //     .then(res => res.json())
+    //     // return the data
+    //     .then(data => data)
+    //     .catch(err => {
+    //         console.log("error:" + error);
 
-            throw new Error("Error contacting server: " + err)
-        });
-    }
+    //         throw new Error("Error contacting server: " + err)
+    //     });
+    // }
     const defaultFetchCommentData = async () => {
         //fetch locally stored placeholder comments
         return fetch(defaultURL)
@@ -1171,7 +1178,7 @@ const initializeComments = async() => {
         //This tries to contact server, if it can't then it loads the default data
         let result;
         try {
-            result = await fetchCommentData();
+            result = await fetchComments();
             isProd = true;
             isOnline = true;
             document.querySelector('.online-status').textContent = 'Online';
