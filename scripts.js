@@ -31,6 +31,7 @@ class CommentTemplate {
             avatar: user.avatar,
             username: user.username,
         };
+        this.isDeleted = false;
     }
 }
 
@@ -523,9 +524,14 @@ class DeleteHandler {
         this.id = newId;
     }
     onClickDeleteComment(){
-         //TODO: if it was deleted before sent to server delete it completely, otherwise leave it in tree
-
-        comment.delete(this.targetComment);
+        const data = JSON.stringify({id: this.id})
+        apiRequest(serverURL + "/api/comments/delete", "POST", data, user.token ).then(handleErrors)
+        .then(response => {
+            if(response.ok) comment.delete(this.targetComment);
+        })
+        .catch(err => {
+            error.showError(1, err);
+        })
         //FIXME: Correct the user ID when fixed
         new DeleteCommentPayload(this.id, 'admin000')
         this.hideModal();

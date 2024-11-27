@@ -125,7 +125,10 @@ const comment = {
         //Client Side deletion of Node
         targetComment.classList.add('deleted-comment');
         targetComment.querySelector('.comment-content').textContent = "This Comment has been deleted";
-        targetComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
+        //targetComment.querySelector('.user-avatar').src = './images/avatars/image-deleted.png';
+        targetComment.querySelector('.background-circle').setAttribute('fill', '#000000')
+        let el = targetComment.querySelector('.first');
+        if (el) el.remove();
         targetComment.querySelector('.username').textContent = 'Deleted';
         cleanUpDeletedComment(targetComment);
     },
