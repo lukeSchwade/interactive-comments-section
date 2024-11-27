@@ -68,15 +68,11 @@ class GeneralTree {
             // recursive helper to traverse the tree
             if (!currentNode) return;
 
-            //console.log(`build comment ${currentNode.id} and Comment Object here`);
             let builtComment = buildComment(currentNode);
 
             if (!builtComment.querySelector('.deleted-comment')){
                 //Create an object for managing handlers if comment isn't deleted
-                //COMMENTED OUT UNTIL FUNCTIONAL
-                // commentNodeList.push(new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username));
                 new CommentNode(currentNode.parentId, currentNode.id, builtComment.querySelector('.parent-comment'), currentNode.user.username, currentNode.initialVote);
-                //REPLACE ABOVE WHEN FINISHED
             }
             const appendTarget = builtComment.querySelector('.child-comment-gridblock');
             // Add the node to the result array
@@ -86,8 +82,6 @@ class GeneralTree {
                 appendTarget.appendChild(traverse(childNode, builtComment));
             }
             if (!currentNode.parentId) {
-                //console.log("root comment is appended to DOM here");
-                //Add an ID to find and then Delete when used
                
                 appendHere.appendChild(builtComment);
 
@@ -97,16 +91,11 @@ class GeneralTree {
             }
             return builtComment;
         }
-
-        
-
         // Call the traverse helper with the root node to start the traversal
         const finalHTMLnode = traverse(this.root, commentsContainer);
         return;
     }
 }
-
-
 
 const moveReplyCard = (targetNode) => {
     // if the currentCommentfocus is the comment section moves replycard to top of comments
@@ -126,7 +115,6 @@ const submitReply = (evt, commentId = totalComments++) => {
     const newComment = buildComment(newNode, true);
     new CommentNode(newNode.parentId, newNode.id, newComment.querySelector('.parent-comment'), newNode.user.username, 1);
     parentWrapper.insertBefore(newComment, replyWindow);
-    //Delete the reply Window
     replyWindow.remove();
 }
 
@@ -258,9 +246,7 @@ class CommentNode {
         deleteHandler.showModal();
         //openDeleteModal(this.linkedCommentEl);
     }
-    deleteNode(){
-        //Clear all references and listeners to free up memory when a comment is deleted
-    }
+
 }
 
 class UpvoteHandler {
@@ -275,12 +261,10 @@ class UpvoteHandler {
         this.spamHandler = null;
     }
     onClick(evt){
-        //Find closest button
-        //First implementation (will need to refactor to include all buttons, just a proof of concept)
         //This if statement wrapper catches exceptions
         //Determine how to update the state
         //Create an Upvote Payload 
-        if (!this.spamHandler) this.spamHandler = new UpvotePayload(this.id, 'admin000', this.state) //FIXME: fix actual user ID
+        if (!this.spamHandler) this.spamHandler = new UpvotePayload(this.id, user.id, this.state) 
         
         if (evt.target.closest('button')) {
             let target = evt.target.closest('button');
@@ -290,7 +274,6 @@ class UpvoteHandler {
                 this.updateState(-1);
             }
         }
-
 
     }
     updateState(newState){
@@ -633,16 +616,19 @@ class LoginHandler {
         }) 
     }
     handleGlobalClick(evt){
-        //If the click did not happen inside the Modal, close the modal
-        if (user.loginHandler.isOpen && !evt.target.closest('.login-modal')){
+        //If the click did not start inside the modal or end inside the modal
+        if (user.loginHandler.isOpen && (!evt.target.closest('.modal') && !globalClick.startedInsideModal)){
             user.loginHandler.closeModal(); 
+            globalClick.reset();
             //'this' refers to the event, so need to use loginHandler
         }
     }
+
     openModal(){
         //Open the modal
         loginModal.show();
-        document.addEventListener('click', this.handleGlobalClick);
+        document.addEventListener('mouseup', this.handleGlobalClick);
+        document.addEventListener('mousedown', trackMouseDown);
         this.isOpen = true;
         avatarHandler.refreshColors();
     }
@@ -653,10 +639,25 @@ class LoginHandler {
     }
     cleanUp(){
         //Remove eventlisteners and clean form inputs
-        document.removeEventListener('click,', this.handleGlobalClick);
+        document.removeEventListener('mouseup', this.handleGlobalClick);
+        document.removeEventListener('mousedown', trackMouseDown);
+
     }
 }
-
+const trackMouseDown = (evt) => {
+    //These functions store where the mouse was when you first clicked
+    //so you can click on modal and drag mouse off and it won't close modal
+    globalClick.isInsideModal(evt);
+}
+const globalClick = {
+    startedInsideModal: false,
+    isInsideModal(evt){
+        this.startedInsideModal = evt.target.closest('.modal')? true : false;
+    },
+    reset(){
+        this.startedInsideModal = false;
+    }
+}
 
 class SortHandler {
     constructor() {
@@ -705,7 +706,6 @@ class HeaderHandler {
 
     onClick(evt){
         const whichBtn = headerClickHandler(evt);
-        console.log(whichBtn);
         switch (whichBtn) {
             case 'login':
                 this.clickLogin();
