@@ -1,3 +1,11 @@
+class ServerError extends Error {
+  constructor(data){
+    super(data.message);
+    this.status = data.status;
+    this.serverMessage = data.message
+  }
+}
+
 const apiRequest = (url, method, data = null, additionalHeaders = false) => {
     let init = {
       method: method,
@@ -28,10 +36,8 @@ const apiRequest = (url, method, data = null, additionalHeaders = false) => {
     if (response.ok) { //response.ok means an http status in the 200-299 range
       return response
     }
-    return response.json().then(errorResponse => {
-      //
-      throw new Error(JSON.stringify(errorResponse));
-    });
+    throw new ServerError(response);
+    
   }
 
   export default apiRequest

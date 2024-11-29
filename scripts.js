@@ -246,12 +246,15 @@ class UpvoteHandler {
         this.downvoteBtn = this.buttonWidget.querySelector('.vote-btn.minus');
         this.id = id;
         this.spamHandler = null;
+        this.isOwner = false;
+        if (this.upvoteBtn.closest('.comment').querySelector('.you-flag')) this.isOwner = true;
     }
     onClick(evt){
         //This if statement wrapper catches exceptions
         //Determine how to update the state
         //Create an Upvote Payload 
-        if (!this.spamHandler) this.spamHandler = new UpvotePayload(this.id, user.id, this.state) 
+        
+        if (!this.spamHandler) this.spamHandler = new UpvotePayload(this.id, user.id, this.state, this.isOwner ) 
         if (evt.target.closest('button')) {
             let target = evt.target.closest('button');
             if (target.className.includes('plus')) {
@@ -283,26 +286,26 @@ class UpvoteHandler {
             this.spamHandler.updateState(this.state)
         }
     }
-    updateVisual(newState) {
+    updateVisual(newState, changeNum = true) {
         //Change which button is highlighted based on what state it is
         const score = this.buttonWidget.querySelector('.comment-rating');
         switch (this.state) {
             case -1:
                 this.downvoteBtn.classList.add("active");
                 this.upvoteBtn.classList.remove("active");
-                score.textContent = parseInt(score.textContent) + newState;
+                if (changeNum == true) score.textContent = parseInt(score.textContent) + newState;
                 break;
             
             case 0:
                 this.upvoteBtn.classList.remove("active");
                 this.downvoteBtn.classList.remove("active");
-                score.textContent = parseInt(score.textContent) - newState;
+                if (changeNum == true) score.textContent = parseInt(score.textContent) - newState;
                 break;
             
             case 1:
                 this.upvoteBtn.classList.add("active");
                 this.downvoteBtn.classList.remove("active");
-                score.textContent = parseInt(score.textContent) + newState;
+                if (changeNum == true) score.textContent = parseInt(score.textContent) + newState;
                 break;
 
             default:
@@ -310,13 +313,21 @@ class UpvoteHandler {
         }
     }
     changeInitialVote(initialVote = 0){
-        //Change the state of the upvote indicator w/o msging server
-        if (initialVote == 1) {
+        //Change the visual state of the upvote indicator w/o msging server
+        //Also dont increment score if message comes from server
+        //Change the vote if this.isOwner is true;
+        //and
+        let changeNum = this.isOwner? true : false;
+        if (this.isOwner && initialVote == 0 ){
             this.state = 1;
-            this.updateVisual(1);
-        } else if (initialVote == -1) {
+            this.updateVisual(1, false);
+        }
+        if (initialVote === 1) {
             this.state = 1;
-            this.updateState(-1);
+            this.updateVisual(1, changeNum);
+        } else if (initialVote === -1) {
+            this.state = -1;
+            this.updateVisual(-1, changeNum);
         }
     }
 
@@ -851,18 +862,15 @@ user.checkStatus();
 //These are declared afterwards to prevent undefined errors
 
 const handleServerProblem =(err) => {
-    let errorMessage;
-    try {
-        //if it's a server issue
-        errorMessage = JSON.parse(err.message);
-    } catch (error) {
-        JSON.stringify(err);
-        errorMessage = JSON.parse(err);
-    }
-    if (errorMessage.status == 401 && errorMessage.message == 'Token Expired. Please log in again') {
+    if (err.message === 'TypeError: Failed to fetch') {
+        error.showError("Server is offline");
+    } else if (err.serverMessage === 'Token Expired. Please log in again') {
+        console.log("token expired");
         user.reLogin();
+    } else if (err.status) {
+        error.showError(err.serverMessage, err.status);
     } else {
-        error.showError(errorMessage);
+        error.showError(err.message)
     }
 }
 class AvatarButton {
@@ -968,6 +976,86 @@ const filterCommentPayload = (instance) => {
     
     return finalPayload;
 }   
+class UpvotePayload {
+    //Possible pattern: create an array of upvote payloads, and every 60 seconds iterate through them and delete instances
+    //with a completed key
+    constructor(id, userId, initialStateChange, isOwner){
+        //contents: id, userID of voter, and stateChange
+        this.commentId = id;
+        this.userId = userId;
+        //Should only be -1, 0 or +1
+        this.initialState = initialStateChange;
+        this.stateChange = initialStateChange;
+        this.increment = 0;
+        this.isOwner = isOwner;
+        this.initializeTimer();
+    }
+    messageServer(){
+        // console.log (Object.getOwnPropertyNames(this));
+         const payload = filterCommentPayload(this);
+         const data = JSON.stringify ({
+            id: this.commentId,
+            stateChange: this.stateChange,
+            increment: this.increment,
+            initialState: this.initialState,
+         })
+         //Only send server request if the vote is made on a comment not owned by the User
+        if (!this.isOwner) {
+            apiRequest(serverURL + '/api/comments/vote', "POST", data, user.token).then(handleErrors)
+            .then (response => {
+                //add sound effect or something idk
+            })
+            .catch (err => {
+                handleServerProblem(err);
+            })
+        }
+         console.log(this.isOwner);
+         console.log(data);
+ 
+         this.markForCleanup();
+    }
+    initializeTimer(){
+        //anti-spam timer that waits 2 seconds after the last state change before sending server request 
+
+        this.remainingTime = 1;
+        this.intervalTimer = setInterval(() => this.updateTimer(), 1000) // this uses the wrong 'this' without arrow function
+        //If timer hits 0, send server request
+    }
+    updateTimer(){
+        //Only send server request when the timer is 0, and if the state change is different from original
+        if(this.remainingTime <= 0) {
+            if (this.initialState != this.stateChange) {
+                this.increment = this.stateChange-this.initialState; //The actual increment to send server
+                this.messageServer();
+                //Figure out the increment to tell server; if you went from +1 to -1, server needs to be sent -2
+                
+                //Reset the 'original' state to new state since last server reponse
+                this.initialState = this.stateChange;
+            }
+            
+            clearInterval(this.intervalTimer);
+            this.intervalTimer = null;
+        }
+        this.remainingTime --;
+    }
+    updateState(newState){
+       
+        this.stateChange = newState;
+         //If timer isn't running, restart it
+        if (!this.intervalTimer) {
+            this.initializeTimer();
+            //and change the original state change 
+        } 
+        this.resetTimer();
+    }
+    resetTimer(){
+        this.remainingTime = 2;
+    }
+    markForCleanup(){
+        //console.log("Payload marked for cleanup!")
+        //Method that wipes out the object when a server response is made
+    }
+}
 class ServerPayload {
     //These are currently unused, just here as a historical document of previous design pattern
     //Except for the upvote payload, I am still using the spam-protection
@@ -981,6 +1069,7 @@ class ServerPayload {
         const payload = filterCommentPayload(this);
         //Send the Server the contents of the payload
         console.log(payload);
+
         this.markForCleanup();
 
     }
@@ -1022,59 +1111,59 @@ class EditPayload extends ServerPayload {
         this.messageServer();
     }
 }
-class UpvotePayload extends ServerPayload {
-    //Possible pattern: create an array of upvote payloads, and every 60 seconds iterate through them and delete instances
-    //with a completed key
-    constructor(id, userId, initialStateChange){
-        //contents: id, userID of voter, and stateChange
-        super(id);
-        this.userId = userId;
-        //Should only be -1, 0 or +1
-        this.initialState = initialStateChange;
-        this.stateChange = initialStateChange;
-        this.increment = 0;
-        this.payloadType = "changeUpvote";
-        this.initializeTimer();
-    }
-    initializeTimer(){
-        //anti-spam timer that waits 2 seconds after the last state change before sending server request 
+// class UpvotePayload extends ServerPayload {
+//     //Possible pattern: create an array of upvote payloads, and every 60 seconds iterate through them and delete instances
+//     //with a completed key
+//     constructor(id, userId, initialStateChange){
+//         //contents: id, userID of voter, and stateChange
+//         super(id);
+//         this.userId = userId;
+//         //Should only be -1, 0 or +1
+//         this.initialState = initialStateChange;
+//         this.stateChange = initialStateChange;
+//         this.increment = 0;
+//         this.payloadType = "changeUpvote";
+//         this.initializeTimer();
+//     }
+//     initializeTimer(){
+//         //anti-spam timer that waits 2 seconds after the last state change before sending server request 
 
-        this.remainingTime = 1;
-        this.intervalTimer = setInterval(() => this.updateTimer(), 1000) // this uses the wrong 'this' without arrow function
-        //If timer hits 0, send server request
-    }
-    updateTimer(){
+//         this.remainingTime = 1;
+//         this.intervalTimer = setInterval(() => this.updateTimer(), 1000) // this uses the wrong 'this' without arrow function
+//         //If timer hits 0, send server request
+//     }
+//     updateTimer(){
 
-        //Only send server request when the timer is 0, and if the state change is different from original
-        if(this.remainingTime <= 0) {
-            if (this.initialState != this.stateChange) {
-                this.increment = this.stateChange-this.initialState; //The actual increment to send server
-                this.messageServer();
-                //Figure out the increment to tell server; if you went from +1 to -1, server needs to be sent -2
+//         //Only send server request when the timer is 0, and if the state change is different from original
+//         if(this.remainingTime <= 0) {
+//             if (this.initialState != this.stateChange) {
+//                 this.increment = this.stateChange-this.initialState; //The actual increment to send server
+//                 this.messageServer();
+//                 //Figure out the increment to tell server; if you went from +1 to -1, server needs to be sent -2
                 
-                //Reset the 'original' state to new state since last server reponse
-                this.initialState = this.stateChange;
-            }
+//                 //Reset the 'original' state to new state since last server reponse
+//                 this.initialState = this.stateChange;
+//             }
             
-            clearInterval(this.intervalTimer);
-            this.intervalTimer = null;
-        }
-        this.remainingTime --;
-    }
-    updateState(newState){
+//             clearInterval(this.intervalTimer);
+//             this.intervalTimer = null;
+//         }
+//         this.remainingTime --;
+//     }
+//     updateState(newState){
        
-        this.stateChange = newState;
-         //If timer isn't running, restart it
-        if (!this.intervalTimer) {
-            this.initializeTimer();
-            //and change the original state change 
-        } 
-        this.resetTimer();
-    }
-    resetTimer(){
-        this.remainingTime = 2;
-    }
-}
+//         this.stateChange = newState;
+//          //If timer isn't running, restart it
+//         if (!this.intervalTimer) {
+//             this.initializeTimer();
+//             //and change the original state change 
+//         } 
+//         this.resetTimer();
+//     }
+//     resetTimer(){
+//         this.remainingTime = 2;
+//     }
+// }
 
 const createReplyWindow = (parentComment) => {
     //Create a type window, and place it under the Selected comment REUSE THIS FOR SUBMITTING COMMENT
