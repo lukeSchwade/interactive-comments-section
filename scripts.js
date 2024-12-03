@@ -1211,7 +1211,7 @@ const fetchComments = async () =>{
     .then(response => response.json())
     .then(data => data)
     .catch(err => {
-        throw new Error ("error contacting server: " + err);
+        handleServerProblem(err);
     });
 }
 const renderComments = async (commentData) => {
