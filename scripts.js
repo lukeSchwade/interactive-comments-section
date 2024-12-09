@@ -862,12 +862,10 @@ user.checkStatus();
 //These are declared afterwards to prevent undefined errors
 
 const handleServerProblem =(err) => {
-    if (err.message === 'TypeError: Failed to fetch') {
-        error.showError("Server is offline");
-    } else if (err.serverMessage === 'Token Expired. Please log in again') {
-        console.log("token expired");
+    if (err.message === 'Failed to refresh token') {
+        //if token refresh fails log out and prompt to log in again
         user.reLogin();
-    } else if (err.status) {
+    }  else if (err.status) {
         error.showError(err.serverMessage, err.status);
     } else {
         error.showError(err.message)
