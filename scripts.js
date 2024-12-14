@@ -13,7 +13,8 @@ import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from
 import { error, loginModal, background, avi, comment, editWindow, commentSection } from "./modules/clientrendering.mjs";
 import getDataFromCookie from "./modules/getDataFromCookie.mjs";
 //Function for sending API requests
-import apiRequest, {handleErrors} from './apiRequest.js';
+//import apiRequest, {handleErrors} from './apiRequest.js';
+import requestModule, {handleErrors} from './apiRequest.js';
 const serverURL = `http://localhost:3000`;//CHANGE THIS to DIFFERENT ADDRESS LATER
 const defaultURL = './data.json';
 class CommentTemplate {
@@ -389,7 +390,7 @@ class ReplyHandler {
 
                 });
                 //send add comment request to server
-                apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
+                requestModule.request(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
                 .then(response => {
                     response.json()
                     .then(json =>{
@@ -444,7 +445,7 @@ class EditHandler {
             id: this.id,
             content: newContent
         });
-        apiRequest(serverURL + '/api/comments/edit', "POST", data, user.token).then(handleErrors)
+        requestModule.request(serverURL + '/api/comments/edit', "POST", data, user.token).then(handleErrors)
         .then(response => {
             if (response.ok) editWindow.update(this.targetComment);
         })
@@ -498,7 +499,7 @@ class DeleteHandler {
     }
     onClickDeleteComment(targetComment){
         const data = JSON.stringify({id: this.id})
-        apiRequest(serverURL + "/api/comments/delete", "POST", data, user.token ).then(handleErrors)
+        requestModule.request(serverURL + "/api/comments/delete", "POST", data, user.token ).then(handleErrors)
         .then(response => {
             if(response.ok) comment.delete(targetComment);
         })
@@ -556,7 +557,7 @@ class LoginHandler {
         const password = document.getElementById('loginPassword').value;
         let data = JSON.stringify({ username, password});
         //Send request
-        apiRequest(serverURL + '/api/users/login', 'POST', data).then(handleErrors)
+        requestModule.request(serverURL + '/api/users/login', 'POST', data).then(handleErrors)
         .then(response => {
             response.json()
             .then(json => {
@@ -584,7 +585,7 @@ class LoginHandler {
                     secondColor: document.getElementById('second-color-picker').value
                     }
         const data = JSON.stringify({ username, password, avatar});
-        apiRequest(serverURL + '/api/users/signup', 'POST', data).then(handleErrors)
+        requestModule.request(serverURL + '/api/users/signup', 'POST', data).then(handleErrors)
         .then(response =>{
             response.json()
             .then(json => {
@@ -766,7 +767,7 @@ class UserHandler {
         this.sortHandler ;
         this.headerHandler;
         this.isLoggedIn = false;
-        this.token = null;
+        this.token = null; //Access Token
         this.id = null;
         this.username = null;
         this.avatar = null;
@@ -774,9 +775,9 @@ class UserHandler {
     checkStatus(){
         //Check if the user is logged in and if any info is missing
         this.isLoggedIn = getDataFromCookie("userId") === "" ? false : true;
-        this.token = getDataFromCookie("token");
 
         if (this.isLoggedIn) {
+            if (!this.token) this.token = requestModule.refreshAccessToken();
             this.id = getDataFromCookie("userId");
             this.username = getDataFromCookie("name");
             this.avatar = JSON.parse(localStorage.getItem("avatar"));
@@ -803,11 +804,11 @@ class UserHandler {
     login (isLoggedIn, token, id, username, avatar){
         //change user state to logged in
         this.isLoggedIn = isLoggedIn;
-        this.token = token;
+        this.token = token; 
         this.id = id;
         this.username = username;
         this.avatar = avatar;
-        document.cookie = "token=" + token + "; path=/";
+        //document.cookie = "token=" + token + "; path=/";
         document.cookie = "userId=" + id + "; path=/";
         document.cookie = "name=" + username + "; path=/";
         localStorage.setItem("username", username);
@@ -819,7 +820,7 @@ class UserHandler {
         user.isLoggedIn = false;
         user.id = null;
         user.token = null;
-        document.cookie = "token =; expires = 12-12-1998; path=/;";
+        //document.cookie = "token =; expires = 12-12-1998; path=/;";
         document.cookie = "userId =; expires = 12-12-1998; path=/;";
         document.cookie = "name =; expires = 12-12-1998; path=/";
         localStorage.removeItem("username");
@@ -828,7 +829,7 @@ class UserHandler {
     }
     requestUserInfo(){
         //request user info from the server
-        apiRequest(serverURL + '/api/users/validate'+ this.id, 'GET', null, user.token)
+        requestModule.request(serverURL + '/api/users/validate'+ this.id, 'GET', null, user.token)
         .then(handleErrors)
         .then(response => {
             user.login(true, user.token, response.id, response.username, response.avatar)
@@ -847,6 +848,10 @@ class UserHandler {
             this.headerHandler.logout();
         }
     }
+    refreshToken(token){
+        this.token = token;
+        console.log("access token refreshed");
+    }
     reLogin(){
         //If theres an error with tokens log out user and prompt them to log in again
         user.logout();
@@ -855,21 +860,30 @@ class UserHandler {
     }
 }
 const user = new UserHandler();
+requestModule.setUser(user);
 user.loginHandler = new LoginHandler();
 user.sortHandler = new SortHandler();
 user.headerHandler = new HeaderHandler();
 user.checkStatus();
 //These are declared afterwards to prevent undefined errors
 
-const handleServerProblem =(err) => {
-    if (err.message === 'Failed to refresh token') {
-        //if token refresh fails log out and prompt to log in again
-        user.reLogin();
-    }  else if (err.status) {
-        error.showError(err.serverMessage, err.status);
-    } else {
-        error.showError(err.message)
-    }
+const handleServerProblem =(error) => {
+    const {response} = error;
+    response.json().then(body => {
+        switch (body.message) {
+            case 'Refresh token failure':
+                console.error("Refresh token error. logging out");
+                user.reLogin();
+                break;
+            case 'Unauthorized':
+                if (!user.loginHandler.isOpen) {
+                    user.openLoginModal();
+                }
+                break;
+            default: 
+                console.error(`API Error: ${body.message}`);
+        }
+    });
 }
 class AvatarButton {
     //A class for each button on customization page which keeps track of the colors of avis 
@@ -999,7 +1013,7 @@ class UpvotePayload {
          })
          //Only send server request if the vote is made on a comment not owned by the User
         if (!this.isOwner) {
-            apiRequest(serverURL + '/api/comments/vote', "POST", data, user.token).then(handleErrors)
+            requestModule.request(serverURL + '/api/comments/vote', "POST", data, user.token).then(handleErrors)
             .then (response => {
                 //add sound effect or something idk
             })
@@ -1205,7 +1219,7 @@ const buildReplyCard = () => {
 const fetchComments = async () =>{
     //Fetch Comments
 
-    return apiRequest(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token).then(handleErrors)
+    return requestModule.request(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token).then(handleErrors)
     .then(response => response.json())
     .then(data => data)
     .catch(err => {
@@ -1305,7 +1319,7 @@ const initializeComments = async() => {
                     id: user.id
                 });
                 //send add comment request to server
-                apiRequest(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
+                requestModule.request(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
                 .then(response => {
 
                     response.json()

@@ -1,38 +1,47 @@
 const serverURL = `http://localhost:3000`;
 
-class ServerError extends Error {
-  constructor(data){
-    super(data.message);
-    this.status = data.status;
-    this.serverMessage = data.message
-  }
+let user = null;
+
+
+function setUser(userReference) {
+  // you can update user info by passing a reference to the user object to the module.  
+  // any changes made to the user object in the module will also reflect 
+  // in the global user object in scripts.js.
+  user = userReference;
 }
 
-const refreshAccessToken  = async() => {
-  //Sends request and returns with a new accessToken
-  try {
-    const response = await fetch (`${serverURL}/api/users/refresh`, {
-      method: 'POST',
+const refreshAccessToken = async() => {
+    const init = {
+      method: 'GET',
       credentials: 'include',
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*"
       },
       mode: "cors"
-    })
-    
-    const data = await response.json();
-    if (data.accessToken) {
-      //Set new access token
-      return data.accessToken;
-    } else {
-      throw new Error ('Failed to refresh token');
     }
-  } catch (error) {
-    throw new Error ('Failed to refresh token');
-  }
+    try {
+      const response = await fetch(`${serverURL}/api/users/refresh`, init);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error (`Refresh token failure: ${errorData.message}`);
+      }
+      const data = await response.json();
+      if (data.accessToken){
+        return data.accessToken;
+      } else {
+        throw new Error (`Refresh token failure`);
+      }
+    } catch (error) {
+      if (user) {
+        user.reLogin();
+      }
+      throw new Error (`Refresh token failure`);
+    }
+    
 }
-const apiRequest = (url, method, data = null, accessToken = false) => {
+
+const apiRequest = async (url, method, data = null, accessToken = false) => {
     let init = {
       method: method,
       headers: {
@@ -56,34 +65,44 @@ const apiRequest = (url, method, data = null, accessToken = false) => {
       .catch(result => {
         return result;
       });
-  };
+};
 
-  const requestWrapper = async (url, method, data = null, accessToken = false) => {
-    //Send a request, if the response is that access token expired, refresh token, then resend same request
-    let response;
-    try {
-       response = await apiRequest(url, method, data, accessToken);
-      if (response.status === 401 && response.body.tokenExpired){
-        let newAccessToken = await refreshAccessToken();
-        //set new access token
+const request = async (url, method, data = null, accessToken = false) => {
+  //Send a request, if the response is that access token expired, refresh token, then resend same request
+  let response;
+  try {
+    response = await apiRequest(url, method, data, accessToken);
+    if (!response.ok){
+      const body = await response.json();
+      if (body.tokenExpired) {
+        //Refresh token then resend request
+        const newAccessToken = await refreshAccessToken();
+        if (user) user.refreshAccessToken(newAccessToken);
         response = await apiRequest(url, method, data, newAccessToken);
       }
-      return response;
-    } catch (error) {
-      return error;
     }
-    
+    return response;
+  } catch (error) {
+    //user.reLogin();
+    return error;
   }
   
-  export function handleErrors(response) {
-    //chaining this at end of APIrequest with .then() means it either passes the response thru the chain
-    //or throws an error that can be caught
-    if (response.ok) { //response.ok means an http status in the 200-299 range
-      return response
-    }
-    throw new ServerError(response);
-    
+};
+  
+export function handleErrors(response) {
+  //chaining this at end of APIrequest with .then() means it either passes the response thru the chain
+  //or throws an error that can be caught
+  if (response.ok) { //response.ok means an http status in the 200-299 range
+    return response;
   }
+  throw new Error(response);
+  
+};
 
-  export default requestWrapper
+export default {
+  request,
+  setUser,
+  apiRequest,
+  refreshAccessToken
+}
   
