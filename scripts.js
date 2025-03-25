@@ -855,7 +855,7 @@ class UserHandler {
     reLogin(){
         //If theres an error with tokens log out user and prompt them to log in again
         user.logout();
-        user.loginHandler.showModal();
+        user.loginHandler.openModal();
         error.showError("An error occured, please log in again");
     }
 }
