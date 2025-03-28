@@ -17,6 +17,39 @@ import getDataFromCookie from "./modules/getDataFromCookie.mjs";
 import requestModule, {handleErrors} from './apiRequest.js';
 const serverURL = `http://localhost:3000`;//CHANGE THIS to DIFFERENT ADDRESS LATER
 const defaultURL = './data.json';
+
+class TokenHandler {
+    //Handler for access token that resolves issues with making requests before the request for a new token resolves
+    //This clears up bugs where the client makes a request while an async request to update access token is
+    //already pending, in this case if the tokenPromise is resolving it waits
+    constructor(){
+        this.accessToken = null; //Access token
+        this.tokenPromise = null; //Promise that tracks resolution of token requests
+    }
+    async getToken(){
+        if (this.accessToken) {
+            return this.accessToken; // Return immediately if token alrdy exists
+          }
+      
+          // If token is pending, wait for it to resolve
+          if (this.tokenPromise) {
+            return await this.tokenPromise;
+          }
+      
+          // Otherwise, start token refresh and set the promise
+          this.tokenPromise = requestModule.refreshAccessToken();
+          try {
+            this.accessToken = await this.tokenPromise;
+            return this.accessToken;
+          } finally {
+            this.tokenPromise = null; // Clear the promise after resolving
+          }
+    }
+    invalidateToken(){
+        this.accessToken = null;
+    }
+
+}
 class CommentTemplate {
     //Class for a comment data for purpose of building user replies
     //it mirrors the same format as a comment pulled from the database so it can be fed into buildComment
@@ -390,7 +423,7 @@ class ReplyHandler {
 
                 });
                 //send add comment request to server
-                requestModule.request(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
+                requestModule.request(serverURL + '/api/comments/add', 'POST', data, 1).then(handleErrors)
                 .then(response => {
                     response.json()
                     .then(json =>{
@@ -445,7 +478,7 @@ class EditHandler {
             id: this.id,
             content: newContent
         });
-        requestModule.request(serverURL + '/api/comments/edit', "POST", data, user.token).then(handleErrors)
+        requestModule.request(serverURL + '/api/comments/edit', "POST", data, user.tokenHandler.getToken()).then(handleErrors)
         .then(response => {
             if (response.ok) editWindow.update(this.targetComment);
         })
@@ -499,7 +532,7 @@ class DeleteHandler {
     }
     onClickDeleteComment(targetComment){
         const data = JSON.stringify({id: this.id})
-        requestModule.request(serverURL + "/api/comments/delete", "POST", data, user.token ).then(handleErrors)
+        requestModule.request(serverURL + "/api/comments/delete", "POST", data, 1 ).then(handleErrors)
         .then(response => {
             if(response.ok) comment.delete(targetComment);
         })
@@ -561,6 +594,7 @@ class LoginHandler {
         .then(response => {
             response.json()
             .then(json => {
+                //Possibly remove this
                 user.login(true, json.token, json.id, json.username, json.avatar)
                 user.loginHandler.closeModal();
                 location.reload();
@@ -589,6 +623,7 @@ class LoginHandler {
         .then(response =>{
             response.json()
             .then(json => {
+                //possibly remove this
                 user.login(true, json.token, json.id, json.username, json.avatar);
                 user.loginHandler.closeModal();
                 location.reload();
@@ -686,7 +721,6 @@ class HeaderHandler {
     //Handler for the buttons in the header
     constructor(){
         document.querySelector('.utility-nav-tray').addEventListener('click', (evt) => this.onClick(evt))
-        //this.checkStatus();
     }
 
     onClick(evt){
@@ -755,6 +789,8 @@ class HeaderHandler {
         };
     }
 }
+
+
 class UserHandler {
     //Object for organizing all the handlers into one spot
     constructor(){
@@ -767,29 +803,37 @@ class UserHandler {
         this.sortHandler ;
         this.headerHandler;
         this.isLoggedIn = false;
-        this.token = null; //Access Token
+        this.tokenHandler = null; //Handler for token and requests
         this.id = null;
         this.username = null;
         this.avatar = null;
     }
-    checkStatus(){
-        //Check if the user is logged in and if any info is missing
-        this.isLoggedIn = getDataFromCookie("userId") === "" ? false : true;
+    async checkLoginStatus(){
+        //Send refresh token to server to see if the user is logged in
+        try {
+            const response = await fetch (`${serverURL}/api/users/refresh/check-auth`, {
+                method: "GET",
+                credentials: "include", //Sends the cookie!
+            });
 
-        if (this.isLoggedIn) {
-            if (!this.token) this.token = requestModule.refreshAccessToken();
-            this.id = getDataFromCookie("userId");
-            this.username = getDataFromCookie("name");
-            this.avatar = JSON.parse(localStorage.getItem("avatar"));
-            //Try to update all the fields, and send server request if any of them are missing
-            if (this.token && (!this.username  || !this.avatar) ) {
-                //If you have a token but are missing other info, send request to get info again
-                this.requestUserInfo();
+            const data = await response.json();
+            if (data.loggedIn) {
+                this.isLoggedIn = true;
+
+                //Get an access token as well
+                const token = await this.tokenHandler.getToken();
+                this.setAccessToken(token);
+                //update user data then refresh state
+                this.login(true, token, data.id, data.username, data.avatar)
+                
+            } else {
+                this.isLoggedIn = false;
+                this.logout();
             }
-  
-        } else {
-            user.logout();
+        } catch (err){
+            console.error("Error checking login status:", err);
         }
+
         //Update page state to be visually logged out or in
         if (this.isLoggedIn) {
             this.updateStates(true);
@@ -804,7 +848,7 @@ class UserHandler {
     login (isLoggedIn, token, id, username, avatar){
         //change user state to logged in
         this.isLoggedIn = isLoggedIn;
-        this.token = token; 
+        this.tokenHandler.accessToken = token; 
         this.id = id;
         this.username = username;
         this.avatar = avatar;
@@ -819,7 +863,8 @@ class UserHandler {
         //change user state to logged out
         user.isLoggedIn = false;
         user.id = null;
-        user.token = null;
+        //send server request to clear logout token
+        requestModule.request(serverURL + '/api/users/logout', "POST", null, false )
         //document.cookie = "token =; expires = 12-12-1998; path=/;";
         document.cookie = "userId =; expires = 12-12-1998; path=/;";
         document.cookie = "name =; expires = 12-12-1998; path=/";
@@ -828,15 +873,15 @@ class UserHandler {
         this.updateStates(false);
     }
     requestUserInfo(){
+        //Depreciated, just log out the user if theres an error
         //request user info from the server
-        requestModule.request(serverURL + '/api/users/validate'+ this.id, 'GET', null, user.token)
+        requestModule.request(serverURL + '/api/users/validate'+ this.id, 'GET', null, 1)
         .then(handleErrors)
         .then(response => {
-            user.login(true, user.token, response.id, response.username, response.avatar)
+            user.login(true, user.tokenHandler.getToken(), response.id, response.username, response.avatar)
         })
         .catch(err => {
             error.showError(err, 400)
-            this.logout();
             //Log out if theres an error
         });
     }
@@ -848,8 +893,8 @@ class UserHandler {
             this.headerHandler.logout();
         }
     }
-    refreshToken(token){
-        this.token = token;
+    setAccessToken(token){
+        this.tokenHandler.accessToken = token;
         console.log("access token refreshed");
     }
     reLogin(){
@@ -864,7 +909,8 @@ requestModule.setUser(user);
 user.loginHandler = new LoginHandler();
 user.sortHandler = new SortHandler();
 user.headerHandler = new HeaderHandler();
-user.checkStatus();
+user.tokenHandler = new TokenHandler();
+await user.checkLoginStatus();
 //These are declared afterwards to prevent undefined errors
 
 const handleServerProblem =(error) => {
@@ -1013,7 +1059,7 @@ class UpvotePayload {
          })
          //Only send server request if the vote is made on a comment not owned by the User
         if (!this.isOwner) {
-            requestModule.request(serverURL + '/api/comments/vote', "POST", data, user.token).then(handleErrors)
+            requestModule.request(serverURL + '/api/comments/vote', "POST", data, 1).then(handleErrors)
             .then (response => {
                 //add sound effect or something idk
             })
@@ -1218,8 +1264,7 @@ const buildReplyCard = () => {
 
 const fetchComments = async () =>{
     //Fetch Comments
-
-    return requestModule.request(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.token).then(handleErrors)
+    return requestModule.request(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.tokenHandler.token).then(handleErrors)
     .then(response => response.json())
     .then(data => data)
     .catch(err => {
@@ -1319,7 +1364,7 @@ const initializeComments = async() => {
                     id: user.id
                 });
                 //send add comment request to server
-                requestModule.request(serverURL + '/api/comments/add', 'POST', data, user.token).then(handleErrors)
+                requestModule.request(serverURL + '/api/comments/add', 'POST', data, 1).then(handleErrors)
                 .then(response => {
 
                     response.json()

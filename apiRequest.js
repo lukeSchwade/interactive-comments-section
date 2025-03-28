@@ -11,9 +11,10 @@ function setUser(userReference) {
 }
 
 const refreshAccessToken = async() => {
+  //send req to server that asks for a new access token, including the refresh token
     const init = {
       method: 'GET',
-      credentials: 'include',
+      credentials: 'include', //Include the refresh token
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*"
@@ -21,7 +22,9 @@ const refreshAccessToken = async() => {
       mode: "cors"
     }
     try {
+      //Refresh token is in the cookie sent
       const response = await fetch(`${serverURL}/api/users/refresh`, init);
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error (`Refresh token failure: ${errorData.message}`);
@@ -41,7 +44,8 @@ const refreshAccessToken = async() => {
     
 }
 
-const apiRequest = async (url, method, data = null, accessToken = false) => {
+const apiRequest = async (url, method, data = null, usesToken = false) => {
+  //usesToken is determined in the main block to see if it needs access token
     let init = {
       method: method,
       headers: {
@@ -54,7 +58,8 @@ const apiRequest = async (url, method, data = null, accessToken = false) => {
       init.body = data;
     }
     //Add token if there is one
-    if (accessToken) {
+    if (usesToken) {
+      const accessToken = await tokenManager.getToken();
       init.headers.Authorization = `Bearer ${accessToken}`;
       
     }
@@ -67,17 +72,19 @@ const apiRequest = async (url, method, data = null, accessToken = false) => {
       });
 };
 
-const request = async (url, method, data = null, accessToken = false) => {
-  //Send a request, if the response is that access token expired, refresh token, then resend same request
+//The wrapper that includes logic for refreshing Access tokens
+const request = async (url, method, data = null, usesToken = false) => {
+  //Send a request, if the response is that access token expired, refresh the access token w refresh token, then resend same request
   let response;
   try {
-    response = await apiRequest(url, method, data, accessToken);
+    response = await apiRequest(url, method, data, usesToken);
     if (!response.ok){
       const body = await response.json();
       if (body.tokenExpired) {
-        //Refresh token then resend request
+        //Refresh Access Token
         const newAccessToken = await refreshAccessToken();
-        if (user) user.refreshAccessToken(newAccessToken);
+        if (user) user.setAccessToken(newAccessToken);
+        //Send same request but with new Access Token
         response = await apiRequest(url, method, data, newAccessToken);
       }
     }
@@ -88,7 +95,8 @@ const request = async (url, method, data = null, accessToken = false) => {
   }
   
 };
-  
+
+
 export function handleErrors(response) {
   //chaining this at end of APIrequest with .then() means it either passes the response thru the chain
   //or throws an error that can be caught
