@@ -59,7 +59,7 @@ const apiRequest = async (url, method, data = null, usesToken = false) => {
     }
     //Add token if there is one
     if (usesToken) {
-      const accessToken = await tokenManager.getToken();
+      const accessToken = await user.tokenHandler.getToken();
       init.headers.Authorization = `Bearer ${accessToken}`;
       
     }

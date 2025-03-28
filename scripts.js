@@ -751,7 +751,6 @@ class HeaderHandler {
     clickLogout(){
         //log the user out
         user.logout();
-        location.reload();
     }
     clickSettings(){
         //Open settings modal
@@ -823,12 +822,11 @@ class UserHandler {
                 //Get an access token as well
                 const token = await this.tokenHandler.getToken();
                 this.setAccessToken(token);
-                //update user data then refresh state
+                //update user data
                 this.login(true, token, data.id, data.username, data.avatar)
-                
             } else {
                 this.isLoggedIn = false;
-                this.logout();
+                this.updateStates(false)
             }
         } catch (err){
             console.error("Error checking login status:", err);
@@ -859,18 +857,32 @@ class UserHandler {
         localStorage.setItem("avatar", JSON.stringify(avatar));
         this.updateStates(true)
     }
-    logout(){
+    async logout(){
         //change user state to logged out
-        user.isLoggedIn = false;
-        user.id = null;
+
         //send server request to clear logout token
-        requestModule.request(serverURL + '/api/users/logout', "POST", null, false )
-        //document.cookie = "token =; expires = 12-12-1998; path=/;";
-        document.cookie = "userId =; expires = 12-12-1998; path=/;";
-        document.cookie = "name =; expires = 12-12-1998; path=/";
-        localStorage.removeItem("username");
-        localStorage.removeItem("avatar");
-        this.updateStates(false);
+        try {
+            const response = await fetch(`${serverURL}/api/users/logout`, {
+              method: "POST",
+              credentials: "include", // Ensures cookies are sent!
+            });
+            const data = await response.json();
+            if (data.message === "Logged out") {
+                user.isLoggedIn = false;
+                user.id = null;
+                console.log ("logged out");
+                document.cookie = "userId =; expires = 12-12-1998; path=/;";
+                document.cookie = "name =; expires = 12-12-1998; path=/";
+                localStorage.removeItem("username");
+                localStorage.removeItem("avatar");
+                this.updateStates(false);
+                location.reload();
+
+            }     
+       
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     }
     requestUserInfo(){
         //Depreciated, just log out the user if theres an error
@@ -899,7 +911,7 @@ class UserHandler {
     }
     reLogin(){
         //If theres an error with tokens log out user and prompt them to log in again
-        user.logout();
+        user.updateStates(false);
         user.loginHandler.openModal();
         error.showError("An error occured, please log in again");
     }
@@ -1264,7 +1276,7 @@ const buildReplyCard = () => {
 
 const fetchComments = async () =>{
     //Fetch Comments
-    return requestModule.request(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.tokenHandler.token).then(handleErrors)
+    return requestModule.request(serverURL + '/api/comments/get/' + user.sortMethod, "GET", null, user.tokenHandler.accessToken).then(handleErrors)
     .then(response => response.json())
     .then(data => data)
     .catch(err => {
