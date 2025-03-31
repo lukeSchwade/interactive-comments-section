@@ -92,7 +92,6 @@ body {
 }
 
 .dropdown-container {
-  max-width: -moz-max-content;
   max-width: max-content;
   padding: 0.75em;
   font-size: 16px;
@@ -101,9 +100,7 @@ body {
 }
 
 select {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   border: none;
   outline: 1px solid hsl(223, 19%, 93%);
   padding: 0.25em 0.5em;
@@ -356,7 +353,6 @@ button {
   border-radius: 8px;
   font-weight: 500;
   padding: 0.75em 1.5em;
-  height: -moz-fit-content;
   height: fit-content;
 }
 @media (min-width: 767px) {
@@ -374,7 +370,6 @@ button {
   border-radius: 8px;
   font-weight: 500;
   padding: 0.75em 1.5em;
-  height: -moz-fit-content;
   height: fit-content;
 }
 @media (min-width: 767px) {
@@ -532,6 +527,62 @@ button {
   gap: 0.5em;
 }
 
+.settings-modal-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  align-content: center;
+}
+.settings-modal-container .settings-modal {
+  border-radius: 8px;
+  position: relative;
+  margin: auto;
+  background-color: hsl(0, 0%, 100%);
+  padding: 2em;
+  width: 90%;
+  min-height: 10vh;
+  z-index: 3;
+  max-width: 600px;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.2), 0 4px 20px 0 rgba(0, 0, 0, 0.19);
+}
+.settings-modal-container .settings-form > * {
+  margin-top: 1em;
+}
+.settings-modal-container label {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+.settings-modal-container h2 {
+  font-size: 20px;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.settings-modal-container .buttons-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 1em;
+  gap: 1em;
+  justify-content: space-between;
+}
+.settings-modal-container .buttons-container button {
+  padding: 1em 1.5em;
+  font-weight: 500;
+  flex: 1;
+}
+.settings-modal-container .buttons-container .cancel-btn {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(211, 10%, 45%);
+  border-radius: 8px;
+}
+.settings-modal-container .buttons-container .save-button {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(238, 40%, 52%);
+  border-radius: 8px;
+}
+
 .avatar-customization-container {
   display: flex;
   flex-direction: column;
@@ -559,9 +610,7 @@ button {
 .avi-choice .button-container {
   border-radius: 8px;
   flex: 1 1 50px;
-  min-width: -moz-fit-content;
   min-width: fit-content;
-  max-width: -moz-fit-content;
   max-width: fit-content;
   cursor: pointer;
   outline: 1px hsl(223, 19%, 93%) solid;
@@ -636,4 +685,6 @@ button:not(.vote-btn):active {
 
 .deleted-comment .comment-content, .deleted-comment .username {
   opacity: 70%;
-}/*# sourceMappingURL=styles.css.map */
+}
+
+/*# sourceMappingURL=styles.css.map */

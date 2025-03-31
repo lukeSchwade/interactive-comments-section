@@ -10,7 +10,7 @@ let currentUser = null;
 let totalComments;
 //IMPORTS GO HERE
 import { isCurrentUser, isAdmin, convertDateToFromNow, msToTime, toPlural } from "./modules/helpers.mjs";
-import { error, loginModal, background, avi, comment, editWindow, commentSection } from "./modules/clientrendering.mjs";
+import { error, loginModal, background, avi, comment, editWindow, commentSection, settingsModal} from "./modules/clientrendering.mjs";
 import getDataFromCookie from "./modules/getDataFromCookie.mjs";
 //Function for sending API requests
 //import apiRequest, {handleErrors} from './apiRequest.js';
@@ -573,11 +573,124 @@ class DeleteHandler {
 }
 
 //let loginHandler;
+class genericModal {
+    //CURRENTLY UNUSED
+    //A generic modal that streamlines the multiple modals I have (settings, register etc )
+    constructor(){
+        this.isOpen
+        this.typeOfModal = null; //What the window is being used for
+        this.addEventListeners();
+    }
+    addEventListeners(){
+
+    }
+    handleGlobalClick(){
+
+    }
+    openModal(){
+
+    }
+    closeModal(){
+
+    }
+
+}
+
+class settingsHandler {
+    constructor(){
+        this.isOpen = false;
+        this.container = document.querySelector('.settings-modal');
+        this.addEventListeners();
+        this.currentSettings = {}//Store the original Settings
+        // this.updatedSettings = {}//The changed settings
+    }
+    addEventListeners(){
+        document.getElementById("settingsForm").addEventListener('submit', this.saveSettings);
+    }
+    // updateSetting(key, value){
+    //     if (this.currentSettings[key] !== value){
+    //         this.updatedSettings[key] = value;
+    //     }
+    // }
+    async saveSettings(event){
+        //Send server request to change settings
+
+        //prevent default form submission
+        if (event) event.preventDefault();//prevent default form submission
+        // if (Object.keys(this.updatedSettings).length === 0){
+        //     console.log("no changes, skipping");
+        //     return;
+        // }
+        let updatedSettings = {
+            nightMode: document.getElementById('nightModeButton').checked,
+            avatar: {
+                portrait: user.settingsHandler.container.querySelector('input[name="aviChoice"]:checked').value,
+                firstColor: user.settingsHandler.container.querySelector('#first-color-picker').value,
+                secondColor: user.settingsHandler.container.querySelector('#second-color-picker').value
+            }
+        }
+        let payload = JSON.stringify(updatedSettings);
+        try {
+            requestModule.request(serverURL +'/api/users/save-settings', 'POST', payload, 1)
+            .then(handleErrors)
+            .then(response => {
+                response.json()
+                .then(json => {
+                    user.settingsHandler.closeModal();
+                    error.showError("Settings Saved");
+                })
+            })
+        } catch (error) {
+            
+        }
+    
+    }
+    handleGlobalClick(evt){
+        //If the click did not start inside the modal or end inside the modal
+        if (user.settingsHandler.isOpen && (!evt.target.closest('.modal') && !globalClick.startedInsideModal)){
+            user.settingsHandler.closeModal(); 
+            globalClick.reset();
+            //'this' refers to the event, so need to use settingsHandler
+            let avatar = {
+                portrait: document.querySelector('input[name="aviChoice"]:checked').value,
+                firstColor: document.getElementById('first-color-picker').value,
+                secondColor: document.getElementById('second-color-picker').value
+                }
+            
+        }
+    }
+    openModal(){
+        //Open the modal
+        settingsModal.show();
+        //If the avi customizer exists somewhere move it to this container otherwise make new one
+        if (document.querySelector('.avatar-customization-container') && !this.container.contains(document.querySelector('.avatar-customization-container'))){
+            avatarHandler.moveModal(document.getElementById('settingsCustomizationContainer'))
+        } else if (!document.querySelector('.avatar-customization-container')){
+            avi.displayCustomUI(document.getElementById('settingsCustomizationContainer'));
+        }
+        document.addEventListener('mouseup', this.handleGlobalClick);
+        document.addEventListener('mousedown', trackMouseDown);
+        this.isOpen = true;
+        avatarHandler.refreshColors(1);
+    }
+    closeModal(){
+        settingsModal.hide();
+        this.isOpen = false;
+        this.cleanUp();
+    }
+    cleanUp(){
+        //Remove eventlisteners and clean form inputs
+        document.removeEventListener('mouseup', this.handleGlobalClick);
+        document.removeEventListener('mousedown', trackMouseDown);
+
+    }
+}
 class LoginHandler {
     constructor(){
         this.isOpen = false;
         this.addEventListeners();
         //Add the customization widget to the Login Modal
+        this.container = document.querySelector('.login-modal');
         avi.displayCustomUI(document.getElementById('registerCustomizationContainer'));
     }
     addEventListeners(){
@@ -645,6 +758,12 @@ class LoginHandler {
     openModal(){
         //Open the modal
         loginModal.show();
+        //If its missing move it to right spot otherwise make new one
+        if (document.querySelector('.avatar-customization-container')&& !this.container.contains(document.querySelector('.avatar-customization-container'))){
+            avatarHandler.moveModal(document.getElementById('loginCustomizationContainer'))
+        } else if (!document.querySelector('.avatar-customization-container')){
+            avi.displayCustomUI(document.getElementById('loginCustomizationContainer'));
+        }
         document.addEventListener('mouseup', this.handleGlobalClick);
         document.addEventListener('mousedown', trackMouseDown);
         this.isOpen = true;
@@ -754,6 +873,7 @@ class HeaderHandler {
     }
     clickSettings(){
         //Open settings modal
+        if (user.isLoggedIn &&!user.settingsHandler.isOpen) user.settingsHandler.openModal();
     }
     clickProfile(){
         if (!user.isLoggedIn && !user.loginHandler.isOpen) {
@@ -919,6 +1039,7 @@ class UserHandler {
 const user = new UserHandler();
 requestModule.setUser(user);
 user.loginHandler = new LoginHandler();
+user.settingsHandler = new settingsHandler();
 user.sortHandler = new SortHandler();
 user.headerHandler = new HeaderHandler();
 user.tokenHandler = new TokenHandler();
@@ -961,7 +1082,7 @@ class AvatarButton {
 }
 class AvatarCustomizationHandler {
     constructor(){
-        this.container = document.querySelector('avatar-customization-container');
+        this.container = document.querySelector('.avatar-customization-container');
         this.Buttons = []
         this.createEventHandlers();
 
@@ -980,6 +1101,7 @@ class AvatarCustomizationHandler {
         });
     }
     changeColors(whichColor, newColor){
+        //iterate over each button and change the colors for each
         if (whichColor == 'front') {
             this.Buttons.forEach(icon => icon.changeFirst(newColor));
         } else if (whichColor == 'back') {
@@ -987,15 +1109,24 @@ class AvatarCustomizationHandler {
             
         }
     }
-    refreshColors(){
+    refreshColors(input = null){
         //When the modal Opens, get the correct colors
-        const newFront = document.getElementById('first-color-picker').value;
-        const newBack = document.getElementById('second-color-picker').value;
+        let newFront;
+        let newBack;
+        if (input) {
+             newFront = user.avatar.firstColor;
+             newBack = user.avatar.secondColor;
+        } else {
+             newFront = document.getElementById('first-color-picker').value;
+             newBack = document.getElementById('second-color-picker').value;
+        }
+      
         this.changeColors('front', newFront);
         this.changeColors('back', newBack);
     }
-    moveModal(targetElement){
+    moveModal(targetContainer){
         //Moves the whole thing elsewhere
+        targetContainer.appendChild(this.container);
     }
 
 }

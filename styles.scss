@@ -535,6 +535,55 @@ button {
     gap: 0.5em;
 }
 
+.settings-modal-container{
+    @include centeredModal();
+    .settings-modal {
+        @include roundedEdges();
+        position: relative;
+        margin: auto;
+        background-color: $white;
+        padding: 2em;
+        width: 90%;
+        min-height: 10vh;
+        z-index: 3;
+        max-width: 600px;
+        box-shadow: 0 4px 10px 0 rgba(0,0,0,0.2),0 4px 20px 0 rgba(0,0,0,0.19);
+    }
+    .settings-form > *{
+        margin-top: 1em;
+        
+    }
+    label {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+    h2 {
+        font-size: 20px;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+
+    .buttons-container{
+        @include flex-container(row);
+        margin-top: 1em;
+        gap: 1em;
+        justify-content: space-between;
+
+        button {
+            padding: 1em 1.5em;
+            font-weight: 500;
+            flex: 1;
+        }
+        .cancel-btn{
+            @include roundButton($backgroundColor: $grayish-blue);
+        }
+        .save-button{
+            @include roundButton($backgroundColor:$moderate-blue);
+        }
+    }
+   
+}
+
 .avatar-customization-container {
     @include flex-container(column);
     gap: 1em;

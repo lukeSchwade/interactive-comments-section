@@ -4,7 +4,13 @@ const error = {
         //Pops up an error at bottom of screen, then makes it disappear
         const errorModal = document.querySelector('.error-modal');
         const errorMessage = document.querySelector(".error-message");
-        errorMessage.textContent = `${status}: ${response}`;
+        if (status) {
+            errorMessage.textContent = `${status}: ${response}`;
+            
+        } else {
+            errorMessage.textContent = `${response}`;
+            
+        }
         errorModal.classList.remove('fade-in-hidden');
         errorModal.classList.add('fade-in-visible')
         //Hide modal after 5s
@@ -161,4 +167,18 @@ const commentSection = {
     },
 }
 
-export { error, loginModal, background, avi, comment, editWindow, commentSection};
+const settingsModal = {
+    //A blank modal that modules can be put in
+    show(){
+        background.fade();
+        const settingsModal = document.querySelector('.settings-modal-container');
+        settingsModal.classList.remove('hidden');
+    },
+    hide(){
+        background.unfade();
+        const settingsModal = document.querySelector('.settings-modal-container');
+        settingsModal.classList.add('hidden');
+    }
+}
+
+export { error, loginModal, background, avi, comment, editWindow, commentSection, settingsModal};
